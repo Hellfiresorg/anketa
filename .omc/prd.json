@@ -1,0 +1,237 @@
+{
+  "project": "voice-survey (Аудио-анкета)",
+  "version": "1.0.0",
+  "stories": [
+    {
+      "id": "US-001",
+      "title": "Backend Project Scaffold",
+      "description": "FastAPI app skeleton with config, async DB engine, SQLAlchemy models, Alembic migrations, and health endpoint",
+      "passes": true,
+      "acceptanceCriteria": [
+        "backend/pyproject.toml exists with fastapi, uvicorn, sqlalchemy, asyncpg, alembic, pydantic-settings, python-jose, passlib, httpx, arq, redis, groq, openpyxl, weasyprint, nanoid dependencies",
+        "backend/app/main.py creates FastAPI app, registers all routers, includes correlation_id middleware",
+        "backend/app/config.py uses pydantic-settings with DATABASE_URL, REDIS_URL, JWT_SECRET, GROQ_API_KEY, AUDIO_ROOT, FRONTEND_URL, SENTRY_DSN (optional) fields",
+        "backend/app/db.py provides async engine + AsyncSession factory using asyncpg",
+        "All 6 SQLAlchemy models exist (managers, survey_templates, survey_questions, invitations, responses, audit_log) with correct fields per spec",
+        "invitations model has deleted_at TIMESTAMPTZ field for soft delete",
+        "backend/alembic/ is initialized with async support (asyncpg driver in alembic.ini)",
+        "Initial Alembic migration creates all 6 tables with correct indexes",
+        "GET /health returns 200 JSON {status: ok, db: ok, redis: ok}",
+        "backend/.env.example lists all required environment variables with descriptions"
+      ]
+    },
+    {
+      "id": "US-002",
+      "title": "Authentication System",
+      "description": "JWT HS256 auth with bcrypt passwords for manager login/refresh/logout",
+      "passes": true,
+      "acceptanceCriteria": [
+        "POST /api/auth/login with valid credentials returns {access_token, refresh_token, token_type}",
+        "POST /api/auth/login with invalid credentials returns HTTP 401",
+        "Access token expires in 15 minutes, refresh token expires in 7 days",
+        "JWT tokens use HS256 algorithm with JWT_SECRET from env",
+        "POST /api/auth/refresh with valid refresh_token returns new access_token",
+        "POST /api/auth/refresh with expired/invalid token returns HTTP 401",
+        "POST /api/auth/logout clears refresh token (sets cookie MaxAge=0)",
+        "GET /api/me with valid Bearer token returns manager {id, email, full_name, is_active}",
+        "GET /api/me without token returns HTTP 401",
+        "Passwords stored as bcrypt hash with cost=12",
+        "Refresh token stored in httpOnly cookie",
+        "backend/services/security.py contains create_access_token, create_refresh_token, verify_token, hash_password, verify_password functions",
+        "backend/app/api/auth.py implements all 4 auth endpoints"
+      ]
+    },
+    {
+      "id": "US-003",
+      "title": "Public API - Client Survey Flow",
+      "description": "Unauthenticated endpoints for clients to load and fill survey via invitation link",
+      "passes": true,
+      "acceptanceCriteria": [
+        "GET /api/public/invitations/{id} returns invitation info + questions + existing_responses",
+        "GET /api/public/invitations/{id} for nonexistent id returns HTTP 404",
+        "GET /api/public/invitations/{id} for deleted invitation returns HTTP 410",
+        "First GET on pending invitation sets started_at and status='in_progress'",
+        "POST /api/public/invitations/{id}/responses accepts multipart audio file + question_id",
+        "POST /api/public/invitations/{id}/responses returns {response_id, transcription_status: pending}",
+        "POST /api/public/invitations/{id}/responses on completed invitation returns HTTP 409",
+        "POST /api/public/invitations/{id}/responses when re-uploading same question_id: deletes old file, updates record, requeues transcription",
+        "POST /api/public/invitations/{id}/submit verifies all required questions answered",
+        "POST /api/public/invitations/{id}/submit with missing required answers returns HTTP 400 with list of missing question_ids",
+        "POST /api/public/invitations/{id}/submit on complete survey sets status='completed', completed_at=now()",
+        "POST /api/public/invitations/{id}/submit on already-completed survey returns HTTP 409",
+        "Audio file validation: mime type whitelist (audio/webm, audio/mp4, audio/wav, audio/ogg), max size 25MB",
+        "Invalid mime type returns HTTP 422"
+      ]
+    },
+    {
+      "id": "US-004",
+      "title": "Audio Storage & Streaming",
+      "description": "Atomic file storage for audio uploads, Range-request streaming for playback",
+      "passes": true,
+      "acceptanceCriteria": [
+        "backend/app/services/audio_storage.py exists with save_audio(file, invitation_id, response_id, ext) function",
+        "Files saved atomically: written to tmp dir first, then os.rename to final path",
+        "Final path format: {AUDIO_ROOT}/{year}/{month}/{invitation_id}/{response_id}.{ext}",
+        "GET /api/public/responses/{response_id}/audio streams file with correct Content-Type",
+        "GET /api/public/responses/{response_id}/audio supports Range requests (HTTP 206)",
+        "GET /api/admin/responses/{response_id}/audio requires JWT auth",
+        "Disk space check: if free space < 1GB, POST /responses returns HTTP 503",
+        "Magic bytes validation on upload: webm starts with 0x1A 0x45, mp4 has ftyp box",
+        "Failed DB commit after file save: file is deleted (cleanup on error)",
+        "audio_path stored as relative path within AUDIO_ROOT"
+      ]
+    },
+    {
+      "id": "US-005",
+      "title": "Transcription Worker",
+      "description": "arq background worker sending audio to Groq Whisper API with retry logic",
+      "passes": true,
+      "acceptanceCriteria": [
+        "backend/app/workers/arq_worker.py defines transcribe_response(ctx, response_id) task",
+        "Worker sets transcription_status='processing' and increments attempts before calling Groq",
+        "Groq API called with model=whisper-large-v3-turbo, language=ru, response_format=verbose_json",
+        "On success: transcription text saved, status='done', transcribed_at=now()",
+        "HTTP 429 from Groq: retries with exponential backoff respecting Retry-After header",
+        "HTTP 5xx from Groq: retries with backoff schedule 5s, 30s, 2min, 10min, 30min",
+        "HTTP 4xx (non-429) from Groq: immediate status='failed', error saved to transcription_error",
+        "After 5 failed attempts: status='failed', transcription_error set",
+        "ffprobe validation before Groq call: audio < 0.5s → failed 'Запись слишком короткая'",
+        "ffprobe validation: audio > 300s → failed 'Запись превышает максимальную длительность'",
+        "ffprobe not found: log WARNING and skip validation (graceful degradation)",
+        "asyncio.Semaphore(3) limits concurrent Groq API calls",
+        "backend/app/services/transcription.py has TranscriptionService with Groq client",
+        "POST /api/admin/responses/{response_id}/retranscribe resets attempts=0, status=pending, enqueues job"
+      ]
+    },
+    {
+      "id": "US-006",
+      "title": "Manager API",
+      "description": "Authenticated CRUD for invitations - all managers see all invitations",
+      "passes": true,
+      "acceptanceCriteria": [
+        "GET /api/templates returns list of active survey templates",
+        "GET /api/templates/{id} returns template with questions ordered by order_index",
+        "GET /api/invitations returns paginated list of all non-deleted invitations (all managers see all)",
+        "GET /api/invitations supports ?status= filter (pending/in_progress/completed)",
+        "GET /api/invitations supports ?search= filter on client_name and client_phone",
+        "GET /api/invitations supports ?page= and ?page_size= pagination",
+        "GET /api/invitations response includes manager name in each invitation row",
+        "GET /api/invitations response includes transcription progress (X ready / Y total) per invitation",
+        "POST /api/invitations creates invitation with nanoid(12) id, links to requesting manager",
+        "POST /api/invitations returns {id, url} where url={FRONTEND_URL}/s/{id}",
+        "GET /api/invitations/{id} returns full invitation: info + questions + responses with audio_url + transcriptions",
+        "GET /api/invitations/{id} for deleted invitation returns HTTP 404",
+        "DELETE /api/invitations/{id} soft-deletes (sets deleted_at=now()), writes audit_log entry",
+        "GET /api/invitations/{id}/export?format=csv_summary returns CSV file download",
+        "GET /api/invitations/{id}/export?format=csv_rows returns CSV rows file download",
+        "GET /api/invitations/{id}/export?format=xlsx_summary returns XLSX file download",
+        "GET /api/invitations/{id}/export?format=xlsx_rows returns XLSX file download",
+        "GET /api/invitations/{id}/export?format=pdf returns PDF file download",
+        "GET /api/invitations/export?format=csv_summary returns HTTP 501 Not Implemented",
+        "Audit log entries written for: create_invitation, delete_invitation, export, login"
+      ]
+    },
+    {
+      "id": "US-007",
+      "title": "Export Service",
+      "description": "CSV, XLSX (summary + rows formats), and PDF export of survey responses",
+      "passes": true,
+      "acceptanceCriteria": [
+        "backend/app/services/export.py exists with generate_csv_summary, generate_csv_rows, generate_xlsx_summary, generate_xlsx_rows, generate_pdf functions",
+        "CSV summary: one row per invitation, columns: ID, Клиент, Телефон, Менеджер, Статус, Создано, Заполнено, Вопрос 1..N",
+        "CSV rows: one row per answer, columns: ID приглашения, Клиент, Телефон, Номер вопроса, Текст вопроса, Транскрипция, Длительность сек, Дата записи",
+        "XLSX summary uses openpyxl, same structure as CSV summary, auto-column widths",
+        "XLSX rows uses openpyxl, same structure as CSV rows",
+        "PDF uses weasyprint with HTML template: header with client info, question/answer blocks",
+        "All exports return StreamingResponse with correct Content-Disposition filename",
+        "Empty transcription cells shown as empty string (not None/null)"
+      ]
+    },
+    {
+      "id": "US-008",
+      "title": "Backend Tests",
+      "description": "Unit tests for services and integration tests for API endpoints",
+      "passes": true,
+      "acceptanceCriteria": [
+        "backend/tests/test_auth.py: login success, login failure, refresh, me endpoint",
+        "backend/tests/test_public_api.py: get invitation, post response, submit, re-upload response",
+        "backend/tests/test_invitations.py: create, list with filters, get detail, delete (soft), export",
+        "backend/tests/test_transcription.py: success case, retry on 429, immediate fail on 4xx, ffprobe skip",
+        "Tests use pytest-asyncio with anyio backend",
+        "Integration tests use pytest fixtures with in-memory SQLite or testcontainers Postgres",
+        "pytest runs without errors: pytest backend/tests/ -v exits 0",
+        "Test coverage >= 70% on backend/app/ (pytest-cov)"
+      ]
+    },
+    {
+      "id": "US-009",
+      "title": "Frontend Client App",
+      "description": "React/Vite/TypeScript survey-filling UI with audio recorder, upload flow, mobile-first",
+      "passes": true,
+      "acceptanceCriteria": [
+        "frontend-client/ has package.json with react 18, typescript, vite, tailwindcss, shadcn/ui deps",
+        "frontend-client/tailwind.config.ts includes custom primary color #102f6e",
+        "frontend-client/public/brand/logo-placeholder.svg exists (square with #102f6e + LOGO text)",
+        "Survey page /s/:id fetches GET /api/public/invitations/:id and renders questions",
+        "Microphone permission request on 'Start' button with error screen for denied permission",
+        "Audio recording via MediaRecorder API with format detection (webm/mp4/wav fallback)",
+        "Recording screen shows: question text, hint, big round record button, amplitude visualizer, timer",
+        "After recording: playback player, 'Re-record' and 'Next' buttons",
+        "Upload with exponential backoff retry (3 attempts, 60s timeout per attempt)",
+        "Progress bar shows N of M questions completed",
+        "Review screen before submit: list of questions with audio players, 'Re-record' per question",
+        "Submit button calls POST /submit, shows thank-you screen on success",
+        "Completed survey (status=completed): read-only view with players only",
+        "In-progress resume: read-only for answered, continue from first unanswered",
+        "404/410 invitation: shows appropriate error screen",
+        "vite build completes without TypeScript errors",
+        "Red dot indicator in tab title during active recording"
+      ]
+    },
+    {
+      "id": "US-010",
+      "title": "Frontend Admin App",
+      "description": "React/Vite/TypeScript admin panel for managers: login, invitations list, detail view, create",
+      "passes": true,
+      "acceptanceCriteria": [
+        "frontend-admin/ has package.json with react 18, typescript, vite, tailwindcss, shadcn/ui deps",
+        "frontend-admin/tailwind.config.ts includes custom primary color #102f6e",
+        "frontend-admin/public/brand/logo-placeholder.svg exists",
+        "POST /api/auth/login called on login form submit; access token stored in React state",
+        "Refresh token stored in httpOnly cookie; auto-refresh on 401 response",
+        "/login redirects to / if already authenticated",
+        "Protected routes redirect to /login when unauthenticated",
+        "Dashboard / shows table of all invitations: name, phone, manager, status, transcription progress, created date, actions",
+        "Table supports filter by status (All/Pending/In Progress/Completed) and Мои/Все toggle",
+        "Search input filters by client_name or client_phone",
+        "Create invitation form: template selector, client name (required), phone (optional), note (optional)",
+        "After create: modal with invitation link, Copy and Open buttons",
+        "/invitations/:id shows client info, question list with transcription text and audio player per answer",
+        "Transcription status badges (pending/processing/done/failed) with Retry button on failed",
+        "Auto-refresh /invitations/:id every 10s while any answer has transcription_status in (pending, processing)",
+        "Export dropdown on detail page: CSV сводка, CSV построчно, XLSX сводка, XLSX построчно, PDF",
+        "Delete invitation button with confirm dialog (shows client name)",
+        "/settings page with change password form",
+        "vite build completes without TypeScript errors"
+      ]
+    },
+    {
+      "id": "US-011",
+      "title": "Docker Compose, Seed Script, README, DOC.md",
+      "description": "Local dev docker-compose, idempotent seed script, README quickstart, full DOC.md",
+      "passes": true,
+      "acceptanceCriteria": [
+        "docker-compose.yml in project root starts postgres:15-alpine, redis:7-alpine, backend (API), worker (arq), frontend-client (dev), frontend-admin (dev)",
+        "Backend Dockerfile in backend/Dockerfile builds Python app",
+        "Migrations run automatically on backend container startup",
+        "scripts/seed.py creates managers from SEED_MANAGERS env var (email:pass:name,...) idempotently",
+        "scripts/default_questions.yaml has 10 placeholder questions (Вопрос 1..10)",
+        "Seed script creates default survey template idempotently (no duplicates on re-run)",
+        "README.md has: project overview, docker compose quickstart, env vars table, how to add questions, how to add manager, backup instructions, troubleshooting section",
+        "DOC.md has all 12 required sections: overview, architecture, stack, data model, API reference, processes, env vars, local setup, tests, security, troubleshooting, TODO",
+        "DOC.md API reference covers all endpoints with request/response schemas",
+        ".env.example has all required vars with example values"
+      ]
+    }
+  ]
+}

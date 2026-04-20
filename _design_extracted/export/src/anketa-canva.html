@@ -1,0 +1,405 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Анкета · Все экраны</title>
+<template id="__bundler_thumbnail">
+  <svg viewBox="0 0 120 80" xmlns="http://www.w3.org/2000/svg">
+    <rect width="120" height="80" fill="#f0eee9"/>
+    <rect x="10" y="10" width="20" height="36" rx="4" fill="#111827"/>
+    <rect x="11.5" y="11.5" width="17" height="33" rx="3" fill="#fff"/>
+    <rect x="36" y="10" width="20" height="36" rx="4" fill="#111827"/>
+    <rect x="37.5" y="11.5" width="17" height="33" rx="3" fill="#fff"/>
+    <rect x="62" y="10" width="20" height="36" rx="4" fill="#111827"/>
+    <rect x="63.5" y="11.5" width="17" height="33" rx="3" fill="#fff"/>
+    <rect x="13" y="14" width="8" height="8" rx="1.5" fill="#102f6e"/>
+    <text x="17" y="21" text-anchor="middle" font-size="5" font-weight="700" fill="#fff" font-family="system-ui">А</text>
+  </svg>
+</template>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: #f0eee9;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  padding: 48px 60px 80px;
+}
+h2 {
+  font-size: 20px; font-weight: 600; color: rgba(40,30,20,.85);
+  letter-spacing: -0.3px; margin-bottom: 6px;
+}
+.sub { font-size: 13px; color: rgba(60,50,40,.55); margin-bottom: 32px; }
+.row { display: flex; gap: 40px; align-items: flex-start; margin-bottom: 72px; flex-wrap: wrap; }
+.ab { flex-shrink: 0; }
+.ab-label {
+  font-size: 11px; font-weight: 500; color: rgba(60,50,40,.6);
+  margin-bottom: 8px; white-space: nowrap;
+}
+.phone {
+  width: 240px; height: 480px;
+  background: #111827; border-radius: 32px; padding: 8px;
+  box-shadow: 0 20px 40px -12px rgba(0,0,0,.3);
+}
+.screen {
+  width: 100%; height: 100%; background: #fff; border-radius: 26px;
+  overflow: hidden; position: relative;
+}
+.notch {
+  position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+  width: 72px; height: 18px; background: #111827; border-radius: 0 0 12px 12px; z-index: 2;
+}
+/* shared screen content */
+.s { width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; padding: 30px 16px 20px; }
+.logo-mark {
+  width: 36px; height: 36px; border-radius: 7px; background: #102f6e;
+  color: #fff; font-size: 16px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center; margin-bottom: 20px; margin-top: 6px;
+}
+.h1 { font-size: 19px; font-weight: 700; color: #102f6e; text-align: center; margin-bottom: 8px; }
+.body { font-size: 11px; color: #6b7280; text-align: center; margin-bottom: 6px; line-height: 1.5; }
+.cap { font-size: 10px; color: #9ca3af; text-align: center; margin-bottom: 20px; }
+.btn {
+  background: #102f6e; color: #fff; border-radius: 12px;
+  font-size: 14px; font-weight: 600; padding: 10px 28px; border: none; cursor: pointer;
+}
+/* progress bar */
+.pbar { position: absolute; top: 0; left: 0; right: 0; height: 4px; background: #f3f4f6; }
+.pfill { height: 4px; background: #102f6e; }
+/* question screen */
+.q-cap { font-size: 9px; color: #9ca3af; margin-bottom: 4px; }
+.q-text { font-size: 13px; font-weight: 600; color: #111827; text-align: center; margin-bottom: 6px; line-height: 1.4; }
+.q-hint { font-size: 10px; color: #6b7280; font-style: italic; text-align: center; margin-bottom: 14px; }
+.textarea {
+  width: 100%; min-height: 80px; border: 1px solid #d1d5db; border-radius: 8px;
+  padding: 10px 42px 10px 10px; font-size: 11px; color: #374151; resize: none;
+  line-height: 1.5; position: relative;
+}
+.mic {
+  position: absolute; bottom: 8px; right: 8px;
+  width: 28px; height: 28px; border-radius: 9999px; background: #102f6e;
+  display: flex; align-items: center; justify-content: center;
+}
+.ta-wrap { position: relative; width: 100%; margin-bottom: 14px; }
+.btn-full { width: 100%; font-size: 13px; padding: 9px; }
+/* review */
+.rev-h { font-size: 15px; font-weight: 700; color: #102f6e; margin-bottom: 4px; }
+.rev-sub { font-size: 10px; color: #6b7280; margin-bottom: 12px; }
+.rev-item { border: 1px solid #e5e7eb; border-radius: 8px; padding: 10px; margin-bottom: 8px; width: 100%; }
+.rev-q { font-size: 10px; font-weight: 600; color: #374151; margin-bottom: 4px; }
+.rev-a { font-size: 10px; color: #4b5563; background: #f9fafb; border-radius: 4px; padding: 5px 7px; }
+/* thank you */
+.check-circle {
+  width: 52px; height: 52px; border-radius: 9999px; background: #dcfce7;
+  display: flex; align-items: center; justify-content: center; margin-bottom: 18px;
+}
+/* admin */
+.admin-frame {
+  background: #f9fafb; border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0,0,0,.08), 0 4px 16px rgba(0,0,0,.06);
+  overflow: hidden;
+}
+.admin-nav {
+  background: #fff; border-bottom: 1px solid #e5e7eb;
+  padding: 9px 16px; display: flex; align-items: center; gap: 8px; font-size: 12px;
+}
+.nav-logo { width: 22px; height: 22px; border-radius: 4px; background: #102f6e; color: #fff; font-size: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+.nav-brand { font-weight: 600; color: #102f6e; font-size: 13px; }
+.nav-sep { color: #d1d5db; }
+.nav-page { color: #6b7280; font-size: 12px; }
+.nav-right { margin-left: auto; color: #9ca3af; font-size: 11px; }
+.admin-body { padding: 16px; }
+/* table */
+.filters { display: flex; gap: 8px; margin-bottom: 14px; }
+.a-input { border: 1px solid #d1d5db; border-radius: 6px; padding: 5px 9px; font-size: 11px; background: #fff; flex: 1; }
+.a-btn { background: #102f6e; color: #fff; font-weight: 600; font-size: 11px; padding: 5px 10px; border-radius: 6px; border: none; white-space: nowrap; }
+.a-sel { border: 1px solid #d1d5db; border-radius: 6px; padding: 5px 8px; font-size: 11px; background: #fff; width: 120px; }
+.tbl { width: 100%; border-collapse: collapse; font-size: 11px; }
+.tbl thead tr { background: #f9fafb; border-bottom: 1px solid #e5e7eb; }
+.tbl th { text-align: left; padding: 8px 12px; font-weight: 500; color: #4b5563; font-size: 10px; }
+.tbl tbody tr { border-bottom: 1px solid #f3f4f6; }
+.tbl tbody tr:last-child { border: 0; }
+.tbl td { padding: 9px 12px; color: #374151; }
+.tbl td.n { font-weight: 500; color: #111827; }
+.tbl td.m { color: #6b7280; }
+.chip { display: inline-block; font-size: 10px; font-weight: 500; padding: 2px 8px; border-radius: 9999px; }
+.cd { background: #dcfce7; color: #166534; }
+.cp { background: #dbeafe; color: #1e40af; }
+.cw { background: #fef3c7; color: #92400e; }
+/* detail */
+.bc { display: flex; align-items: center; gap: 6px; font-size: 11px; color: #9ca3af; margin-bottom: 12px; }
+.bc a { color: #9ca3af; }
+.bc .cur { color: #374151; font-weight: 500; }
+.dh { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; }
+.d-name { font-size: 15px; font-weight: 700; color: #111827; }
+.d-ph { font-size: 11px; color: #6b7280; margin-top: 2px; }
+.d-dt { font-size: 10px; color: #9ca3af; margin-top: 2px; }
+.q-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px; margin-bottom: 10px; }
+.q-title { font-size: 11px; font-weight: 600; color: #1f2937; margin-bottom: 8px; }
+.player { background: linear-gradient(135deg,#102f6e,#1a3f90); border-radius: 7px; padding: 9px 12px; display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.play-btn { width: 26px; height: 26px; border-radius: 9999px; background: rgba(255,255,255,.2); border: 1.5px solid rgba(255,255,255,.3); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.wf { flex: 1; display: flex; align-items: center; gap: 1.5px; height: 18px; }
+.wf span { flex: 1; border-radius: 1.5px; }
+.wf span.p { background: rgba(255,255,255,.9); }
+.wf span.u { background: rgba(255,255,255,.25); }
+.times { display: flex; justify-content: space-between; font-size: 9px; color: rgba(255,255,255,.6); margin-top: 3px; }
+.times .cur { color: #fff; font-weight: 600; }
+.transcript { font-size: 10px; color: #374151; background: #f9fafb; border-radius: 5px; padding: 8px 10px; line-height: 1.55; }
+</style>
+</head>
+<body>
+
+<!-- ── CLIENT FLOW ── -->
+<h2>Клиентский флоу</h2>
+<p class="sub">Ссылка приходит в SMS → клиент открывает в браузере → заполняет голосом или текстом</p>
+<div class="row">
+
+  <!-- 01 Welcome -->
+  <div class="ab">
+    <div class="ab-label">01 · Приветствие</div>
+    <div class="phone"><div class="screen">
+      <div class="notch"></div>
+      <div class="s" style="justify-content:center">
+        <div class="logo-mark">А</div>
+        <div class="h1">Добро пожаловать, Мария!</div>
+        <div class="body">Вам предстоит ответить на <strong>4</strong> вопроса.</div>
+        <div class="cap" style="margin-bottom:24px">Примерное время: 6 минут</div>
+        <button class="btn">Начать</button>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- 02 Question empty -->
+  <div class="ab">
+    <div class="ab-label">02 · Вопрос (пустой)</div>
+    <div class="phone"><div class="screen">
+      <div class="notch"></div>
+      <div class="pbar"><div class="pfill" style="width:25%"></div></div>
+      <div class="s" style="justify-content:center;padding-top:40px">
+        <div class="q-cap">Вопрос 1 из 4</div>
+        <div class="q-text">С какой целью вы обращаетесь?</div>
+        <div class="q-hint">Опишите вкратце в одном-двух предложениях</div>
+        <div class="ta-wrap">
+          <div class="textarea" style="color:#9ca3af">Введите ответ или нажмите кнопку микрофона для голосового ввода</div>
+          <div class="mic">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="9" y="2" width="6" height="11" rx="3"/><path d="M5 10a7 7 0 0 0 14 0"/><line x1="12" y1="17" x2="12" y2="22"/><line x1="8" y1="22" x2="16" y2="22"/>
+            </svg>
+          </div>
+        </div>
+        <button class="btn btn-full" disabled style="opacity:.4">Далее →</button>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- 03 Question with answer -->
+  <div class="ab">
+    <div class="ab-label">03 · Вопрос (с ответом)</div>
+    <div class="phone"><div class="screen">
+      <div class="notch"></div>
+      <div class="pbar"><div class="pfill" style="width:50%"></div></div>
+      <div class="s" style="justify-content:center;padding-top:40px">
+        <div class="q-cap">Вопрос 2 из 4</div>
+        <div class="q-text">Как вы узнали о нас?</div>
+        <div class="ta-wrap">
+          <div class="textarea">Узнала от подруги, она у вас была в марте и очень рекомендовала.</div>
+          <div class="mic">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="9" y="2" width="6" height="11" rx="3"/><path d="M5 10a7 7 0 0 0 14 0"/><line x1="12" y1="17" x2="12" y2="22"/><line x1="8" y1="22" x2="16" y2="22"/>
+            </svg>
+          </div>
+        </div>
+        <button class="btn btn-full">Далее →</button>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- 04 Review -->
+  <div class="ab">
+    <div class="ab-label">04 · Проверка ответов</div>
+    <div class="phone"><div class="screen">
+      <div class="notch"></div>
+      <div class="s" style="padding-top:36px;align-items:flex-start">
+        <div class="rev-h">Проверьте ответы</div>
+        <div class="rev-sub">Нажмите на вопрос, чтобы отредактировать.</div>
+        <div class="rev-item">
+          <div class="rev-q">1. С какой целью вы обращаетесь?</div>
+          <div class="rev-a">Хочу получить консультацию по услугам.</div>
+        </div>
+        <div class="rev-item">
+          <div class="rev-q">2. Как вы узнали о нас?</div>
+          <div class="rev-a">Узнала от подруги, она у вас была в марте.</div>
+        </div>
+        <div class="rev-item">
+          <div class="rev-q">3. Особые пожелания?</div>
+          <div class="rev-a" style="color:#d97706">Нет ответа</div>
+        </div>
+        <div class="rev-item">
+          <div class="rev-q">4. Удобный способ связи?</div>
+          <div class="rev-a">WhatsApp, после 17:00</div>
+        </div>
+        <button class="btn btn-full" style="margin-top:8px">Отправить анкету</button>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- 05 Submitting -->
+  <div class="ab">
+    <div class="ab-label">05 · Отправка</div>
+    <div class="phone"><div class="screen">
+      <div class="notch"></div>
+      <div class="s" style="justify-content:center;text-align:center">
+        <div style="width:28px;height:28px;border:3px solid #e5e7eb;border-top-color:#102f6e;border-radius:9999px;margin:0 auto 16px;"></div>
+        <div style="font-size:13px;color:#6b7280">Отправляем анкету...</div>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- 06 Done -->
+  <div class="ab">
+    <div class="ab-label">06 · Спасибо</div>
+    <div class="phone"><div class="screen">
+      <div class="notch"></div>
+      <div class="s" style="justify-content:center;text-align:center">
+        <div class="check-circle">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <div class="h1" style="font-size:18px;margin-bottom:10px">Спасибо!</div>
+        <div class="body">Ваша анкета успешно отправлена. Мы свяжемся с вами в ближайшее время.</div>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- 07 Readonly -->
+  <div class="ab">
+    <div class="ab-label">07 · Уже заполнено</div>
+    <div class="phone"><div class="screen">
+      <div class="notch"></div>
+      <div class="s" style="padding-top:36px;align-items:flex-start">
+        <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:10px;text-align:center;width:100%;margin-bottom:14px">
+          <div style="color:#92400e;font-size:11px;font-weight:500">Анкета уже заполнена</div>
+          <div style="color:#d97706;font-size:10px;margin-top:2px">Редактирование недоступно</div>
+        </div>
+        <div class="rev-h" style="font-size:13px;margin-bottom:10px">Ваши ответы</div>
+        <div class="rev-item">
+          <div class="rev-q">1. С какой целью вы обращаетесь?</div>
+          <div class="rev-a">Хочу получить консультацию по услугам.</div>
+        </div>
+        <div class="rev-item">
+          <div class="rev-q">2. Как вы узнали о нас?</div>
+          <div class="rev-a">Узнала от подруги, она у вас была в марте.</div>
+        </div>
+      </div>
+    </div></div>
+  </div>
+
+</div>
+
+<!-- ── ADMIN PANEL ── -->
+<h2>Административная панель</h2>
+<p class="sub">Веб-интерфейс для команды: список анкет, детальный просмотр, экспорт</p>
+<div class="row">
+
+  <!-- 08 Admin list -->
+  <div class="ab">
+    <div class="ab-label">08 · Список анкет</div>
+    <div class="admin-frame" style="width:680px">
+      <div class="admin-nav">
+        <div class="nav-logo">А</div>
+        <span class="nav-brand">Анкета</span>
+        <span class="nav-sep">/</span>
+        <span class="nav-page">Анкеты</span>
+        <span class="nav-right">admin@anketa.ru</span>
+      </div>
+      <div class="admin-body">
+        <div class="filters">
+          <input class="a-input" placeholder="Поиск по имени или телефону" readonly>
+          <select class="a-sel"><option>Все статусы</option></select>
+          <button class="a-btn">+ Создать ссылку</button>
+        </div>
+        <div style="background:#fff;border:1px solid #e5e7eb;border-radius:8px;overflow:hidden">
+          <table class="tbl">
+            <thead><tr><th>Клиент</th><th>Телефон</th><th>Дата</th><th>Статус</th></tr></thead>
+            <tbody>
+              <tr><td class="n">Иванова Мария</td><td class="m">+7 900 123-45-67</td><td class="m">18.04.2026 14:32</td><td><span class="chip cd">Готово</span></td></tr>
+              <tr><td class="n">Петров Алексей</td><td class="m">+7 916 000-11-22</td><td class="m">18.04.2026 13:10</td><td><span class="chip cp">Обрабатывается</span></td></tr>
+              <tr><td class="n">Смирнова Ольга</td><td class="m">+7 903 555-77-88</td><td class="m">17.04.2026 19:45</td><td><span class="chip cd">Готово</span></td></tr>
+              <tr><td class="n">Козлов Дмитрий</td><td class="m">+7 926 444-33-11</td><td class="m">17.04.2026 11:20</td><td><span class="chip cw">Ожидание</span></td></tr>
+              <tr><td class="n">Новикова Анна</td><td class="m">+7 905 888-66-44</td><td class="m">16.04.2026 09:05</td><td><span class="chip cd">Готово</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 09 Admin detail -->
+  <div class="ab">
+    <div class="ab-label">09 · Детальный просмотр</div>
+    <div class="admin-frame" style="width:520px">
+      <div class="admin-nav">
+        <div class="nav-logo">А</div>
+        <span class="nav-brand">Анкета</span>
+        <span class="nav-sep">/</span>
+        <span class="nav-page">Иванова Мария</span>
+        <span class="nav-right">admin@anketa.ru</span>
+      </div>
+      <div class="admin-body">
+        <div class="bc"><a href="#">Анкеты</a><span>/</span><span class="cur">Иванова Мария</span></div>
+        <div class="dh">
+          <div>
+            <div class="d-name">Иванова Мария</div>
+            <div class="d-ph">+7 900 123-45-67</div>
+            <div class="d-dt">18 апреля 2026 · 14:32</div>
+          </div>
+          <span class="chip cd">Готово</span>
+        </div>
+        <div class="q-card">
+          <div class="q-title">1. С какой целью вы обращаетесь?</div>
+          <div class="player">
+            <div class="play-btn">
+              <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            </div>
+            <div style="flex:1">
+              <div class="wf" id="wf1"></div>
+              <div class="times"><span class="cur">0:00</span><span>0:14</span></div>
+            </div>
+          </div>
+          <div class="transcript">Хочу получить консультацию по услугам. Интересует косметология и массаж.</div>
+        </div>
+        <div class="q-card">
+          <div class="q-title">2. Как вы узнали о нас?</div>
+          <div class="player">
+            <div class="play-btn">
+              <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+            </div>
+            <div style="flex:1">
+              <div class="wf" id="wf2"></div>
+              <div class="times"><span class="cur">0:05</span><span>0:12</span></div>
+            </div>
+          </div>
+          <div class="transcript">Узнала от подруги, она у вас была в марте и очень рекомендовала.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const H = [6,9,15,12,19,15,22,13,17,20,24,17,14,11,8,17,13,19,10,7,16,12,20,14,18];
+function makeWave(id, played) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const n = H.length, head = Math.round(played * n);
+  H.forEach((h,i) => {
+    const s = document.createElement('span');
+    s.style.height = h+'px';
+    s.className = i < head ? 'p' : 'u';
+    el.appendChild(s);
+  });
+}
+makeWave('wf1', 0);
+makeWave('wf2', 0.42);
+</script>
+</body>
+</html>

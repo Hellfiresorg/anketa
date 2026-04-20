@@ -1,0 +1,7 @@
+{
+  "tool_name": "Bash",
+  "tool_input_preview": "{\"command\":\"curl -s http://localhost:8001/openapi.json | python3 -c \\\"import sys,json; paths=json.load(sys.stdin)['paths']; print('✅ text route:', '/api/public/invitations/{invitation_id}/responses/te...",
+  "error": "Exit code 1\nTraceback (most recent call last):\r\n  File \"<string>\", line 1, in <module>\r\n    import sys,json; paths=json.load(sys.stdin)['paths']; print('\\u2705 text route:', '/api/public/invitations/{invitation_id}/responses/text' in paths)\r\n                                                          ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\r\n  File \"C:\\Program Files\\WindowsApps\\PythonSoftwareFoundation.Python.3.13_3.13.3568.0_x64__qbz5n2kfra8p0\\Lib...",
+  "timestamp": "2026-04-18T08:15:43.920Z",
+  "retry_count": 2
+}

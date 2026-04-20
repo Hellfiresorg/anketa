@@ -1,0 +1,348 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Анкета · Все экраны</title>
+  <link rel="stylesheet" href="ui_kits/client/client.css">
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+  <script type="text/babel" src="design-canvas.jsx"></script>
+  <script type="text/babel" src="ui_kits/client/ProgressBar.jsx"></script>
+  <script type="text/babel" src="ui_kits/client/WelcomeScreen.jsx"></script>
+  <script type="text/babel" src="ui_kits/client/QuestionScreen.jsx"></script>
+  <script type="text/babel" src="ui_kits/client/ReviewScreen.jsx"></script>
+  <script type="text/babel" src="ui_kits/client/StatusScreens.jsx"></script>
+<style>
+body { margin: 0; overflow: hidden; }
+
+/* phone shell */
+.phone {
+  width: 390px; height: 780px;
+  border-radius: 48px;
+  background: #111827;
+  padding: 12px;
+  box-shadow: 0 30px 60px -20px rgba(0,0,0,0.35), 0 10px 30px -10px rgba(0,0,0,0.2);
+  flex-shrink: 0;
+}
+.phone-screen {
+  width: 100%; height: 100%;
+  border-radius: 38px;
+  overflow: hidden;
+  background: #fff;
+  position: relative;
+}
+.phone-notch {
+  position: absolute; top: 0; left: 50%;
+  transform: translateX(-50%);
+  width: 120px; height: 28px;
+  background: #111827;
+  border-radius: 0 0 20px 20px;
+  z-index: 10;
+}
+
+/* admin mini chrome */
+.admin-wrap {
+  background: #f9fafb;
+  border-radius: 8px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.admin-topbar {
+  background: #fff;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 10px 20px;
+  display: flex; align-items: center; gap: 10px;
+  font-size: 13px;
+}
+.admin-logo-sm {
+  width: 26px; height: 26px; border-radius: 5px;
+  background: #102f6e; color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 12px; flex-shrink: 0;
+}
+.admin-topbar-brand { font-weight: 600; color: #102f6e; }
+.admin-topbar-sep { color: #d1d5db; }
+.admin-topbar-page { color: #6b7280; }
+.admin-body { padding: 20px; flex: 1; }
+
+/* table */
+.a-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.a-table thead tr { background: #f9fafb; border-bottom: 1px solid #e5e7eb; }
+.a-table th { text-align: left; padding: 10px 14px; font-weight: 500; color: #4b5563; font-size: 12px; }
+.a-table tbody tr { border-bottom: 1px solid #f3f4f6; }
+.a-table tbody tr:last-child { border: 0; }
+.a-table td { padding: 10px 14px; color: #374151; }
+.a-table td.name { font-weight: 500; color: #111827; }
+.a-table td.muted { color: #6b7280; }
+.chip { display:inline-block; font-size:11px; font-weight:500; padding:2px 8px; border-radius:9999px; line-height:18px; }
+.chip-done { background:#dcfce7; color:#166534; }
+.chip-proc { background:#dbeafe; color:#1e40af; }
+.chip-pend { background:#fef3c7; color:#92400e; }
+
+/* admin filter row */
+.a-filters { display:flex; gap:10px; margin-bottom:16px; align-items:center; }
+.a-input { border:1px solid #d1d5db; border-radius:7px; padding:7px 11px; font-size:13px; background:#fff; font-family:inherit; color:#374151; }
+.a-btn { background:#102f6e; color:#fff; font-weight:600; font-size:13px; padding:7px 14px; border-radius:7px; border:0; cursor:pointer; font-family:inherit; white-space:nowrap; }
+
+/* admin detail */
+.a-detail-header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:16px; }
+.a-name { font-size:18px; font-weight:700; color:#111827; margin:0 0 2px; }
+.a-phone { font-size:13px; color:#6b7280; margin:0; }
+.a-q-card { background:#fff; border:1px solid #e5e7eb; border-radius:10px; padding:16px; margin-bottom:12px; }
+.a-q-title { font-weight:600; color:#1f2937; font-size:13px; margin:0 0 10px; }
+.a-player { background:linear-gradient(135deg,#102f6e,#1a3f90); border-radius:8px; padding:10px 14px; display:flex; align-items:center; gap:12px; margin-bottom:10px; }
+.a-play-btn { width:32px; height:32px; border-radius:9999px; background:rgba(255,255,255,.2); border:1.5px solid rgba(255,255,255,.35); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.a-wf { flex:1; display:flex; align-items:center; gap:2px; height:22px; }
+.a-wf span { flex:1; border-radius:2px; }
+.a-wf span.p { background:rgba(255,255,255,.9); }
+.a-wf span.u { background:rgba(255,255,255,.25); }
+.a-times { display:flex; justify-content:space-between; font-size:10px; color:rgba(255,255,255,.6); margin-top:4px; }
+.a-times .cur { color:#fff; font-weight:600; }
+.a-transcript { font-size:12px; color:#374151; background:#f9fafb; border-radius:6px; padding:10px 12px; line-height:1.55; }
+
+/* breadcrumb */
+.a-breadcrumb { display:flex; align-items:center; gap:8px; font-size:12px; color:#9ca3af; margin-bottom:16px; }
+.a-breadcrumb a { color:#9ca3af; text-decoration:none; }
+.a-breadcrumb a:hover { color:#102f6e; }
+.a-breadcrumb .sep { color:#d1d5db; }
+.a-breadcrumb .cur { color:#374151; font-weight:500; }
+
+.dc-hint {
+  position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+  background: rgba(0,0,0,.7); color: #fff;
+  font-size: 12px; padding: 8px 16px; border-radius: 99px;
+  font-family: system-ui, sans-serif;
+  pointer-events: none; z-index: 100;
+  opacity: 1; transition: opacity 1s ease;
+}
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+const { useState, useEffect } = React;
+
+const QUESTIONS = [
+  { id:'q1', order_index:1, text:'С какой целью вы обращаетесь?', hint:'Опишите вкратце в одном-двух предложениях', is_required:true },
+  { id:'q2', order_index:2, text:'Как вы узнали о нас?', hint:null, is_required:true },
+  { id:'q3', order_index:3, text:'Есть ли особые пожелания или ограничения?', hint:'Например, аллергии, предпочтения по времени', is_required:false },
+  { id:'q4', order_index:4, text:'Удобный способ связи и время?', hint:null, is_required:true },
+];
+
+const ANSWERS = {
+  q1: 'Хочу получить консультацию по услугам. Интересует косметология.',
+  q2: 'Узнала от подруги, она у вас была в марте.',
+  q3: '',
+  q4: 'WhatsApp, после 17:00',
+};
+
+// ──────────────── mini Waveform ────────────────
+function MiniWave({ played = 0.35 }) {
+  const H = [8,12,18,14,22,18,26,16,20,24,28,20,16,14,10,20,14,22,12,8,18,14,24,16,20];
+  const n = H.length;
+  const head = Math.round(played * n);
+  return (
+    <div className="a-wf">
+      {H.map((h,i) => (
+        <span key={i} style={{height:h}} className={i < head ? 'p' : 'u'} />
+      ))}
+    </div>
+  );
+}
+
+// ──────────────── Phone frame ────────────────
+function Phone({ children, label }) {
+  return (
+    <DCArtboard label={label} width={390} height={780}>
+      <div className="phone" style={{margin:0,boxShadow:'none',width:'100%',height:'100%',padding:12}}>
+        <div className="phone-screen">
+          <div className="phone-notch"/>
+          {children}
+        </div>
+      </div>
+    </DCArtboard>
+  );
+}
+
+// ──────────────── Admin frame ────────────────
+function AdminFrame({ label, page, children, width=760, height=520 }) {
+  return (
+    <DCArtboard label={label} width={width} height={height}>
+      <div className="admin-wrap" style={{height:'100%'}}>
+        <div className="admin-topbar">
+          <div className="admin-logo-sm">А</div>
+          <span className="admin-topbar-brand">Анкета</span>
+          <span className="admin-topbar-sep">/</span>
+          <span className="admin-topbar-page">{page}</span>
+          <div style={{flex:1}}/>
+          <span style={{fontSize:12,color:'#9ca3af'}}>admin@anketa.ru</span>
+        </div>
+        <div className="admin-body" style={{overflow:'auto',flex:1}}>
+          {children}
+        </div>
+      </div>
+    </DCArtboard>
+  );
+}
+
+// ──────────────── Admin — List ────────────────
+function AdminList() {
+  const rows = [
+    { name:'Иванова Мария', phone:'+7 900 123-45-67', date:'18.04.2026 14:32', status:'done' },
+    { name:'Петров Алексей', phone:'+7 916 000-11-22', date:'18.04.2026 13:10', status:'processing' },
+    { name:'Смирнова Ольга', phone:'+7 903 555-77-88', date:'17.04.2026 19:45', status:'done' },
+    { name:'Козлов Дмитрий', phone:'+7 926 444-33-11', date:'17.04.2026 11:20', status:'pending' },
+    { name:'Новикова Анна',  phone:'+7 905 888-66-44', date:'16.04.2026 09:05', status:'done' },
+  ];
+  const label = { done:'Готово', processing:'Обрабатывается', pending:'Ожидание' };
+  const cls   = { done:'chip-done', processing:'chip-proc', pending:'chip-pend' };
+  return (
+    <>
+      <div className="a-filters">
+        <input className="a-input" style={{flex:1}} placeholder="Поиск по имени или телефону" readOnly value="" onChange={()=>{}}/>
+        <select className="a-input" style={{width:160}}><option>Все статусы</option></select>
+        <button className="a-btn">+ Создать ссылку</button>
+      </div>
+      <div style={{background:'#fff',border:'1px solid #e5e7eb',borderRadius:10,overflow:'hidden'}}>
+        <table className="a-table">
+          <thead><tr>
+            <th>Клиент</th><th>Телефон</th><th>Дата</th><th>Статус</th>
+          </tr></thead>
+          <tbody>
+            {rows.map((r,i) => (
+              <tr key={i}>
+                <td className="name">{r.name}</td>
+                <td className="muted">{r.phone}</td>
+                <td className="muted">{r.date}</td>
+                <td><span className={`chip ${cls[r.status]}`}>{label[r.status]}</span></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </>
+  );
+}
+
+// ──────────────── Admin — Detail ────────────────
+function AdminDetail() {
+  return (
+    <>
+      <div className="a-breadcrumb">
+        <a href="#">Анкеты</a><span className="sep">/</span>
+        <span className="cur">Иванова Мария</span>
+      </div>
+      <div className="a-detail-header">
+        <div>
+          <p className="a-name">Иванова Мария</p>
+          <p className="a-phone">+7 900 123-45-67</p>
+          <p style={{fontSize:12,color:'#9ca3af',margin:'4px 0 0'}}>18 апреля 2026 · 14:32</p>
+        </div>
+        <span className="chip chip-done">Готово</span>
+      </div>
+
+      {/* Q1 */}
+      <div className="a-q-card">
+        <p className="a-q-title">1. С какой целью вы обращаетесь?</p>
+        <div className="a-player">
+          <div className="a-play-btn">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          </div>
+          <div style={{flex:1}}>
+            <MiniWave played={0} />
+            <div className="a-times"><span className="cur">0:00</span><span>0:14</span></div>
+          </div>
+        </div>
+        <p className="a-transcript">Хочу получить консультацию по услугам. Интересует косметология и массаж.</p>
+      </div>
+
+      {/* Q2 */}
+      <div className="a-q-card">
+        <p className="a-q-title">2. Как вы узнали о нас?</p>
+        <div className="a-player">
+          <div className="a-play-btn">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+          </div>
+          <div style={{flex:1}}>
+            <MiniWave played={0.4} />
+            <div className="a-times"><span className="cur">0:05</span><span>0:12</span></div>
+          </div>
+        </div>
+        <p className="a-transcript">Узнала от подруги, она у вас была в марте и очень рекомендовала.</p>
+      </div>
+    </>
+  );
+}
+
+// ──────────────── Main ────────────────
+function App() {
+  const [hintVisible, setHintVisible] = useState(true);
+  useEffect(() => { setTimeout(()=>setHintVisible(false), 3500); }, []);
+
+  return (
+    <>
+      <DesignCanvas>
+        {/* ── Клиентский флоу ── */}
+        <DCSection title="Клиентский флоу" subtitle="Ссылка приходит в SMS → клиент открывает в браузере → заполняет голосом или текстом">
+
+          <Phone label="01 · Приветствие">
+            <WelcomeScreen clientName="Мария" totalQuestions={4} onStart={()=>{}} />
+          </Phone>
+
+          <Phone label="02 · Вопрос (пустой)">
+            <QuestionScreen question={QUESTIONS[0]} currentIdx={0} total={4} initialText="" onNext={()=>{}} />
+          </Phone>
+
+          <Phone label="03 · Вопрос (с ответом)">
+            <QuestionScreen question={QUESTIONS[1]} currentIdx={1} total={4} initialText={ANSWERS.q2} onNext={()=>{}} />
+          </Phone>
+
+          <Phone label="04 · Проверка ответов">
+            <ReviewScreen questions={QUESTIONS} answers={ANSWERS} onEdit={()=>{}} onSubmit={()=>{}} />
+          </Phone>
+
+          <Phone label="05 · Отправка">
+            <SubmittingScreen />
+          </Phone>
+
+          <Phone label="06 · Спасибо">
+            <ThankYouScreen />
+          </Phone>
+
+          <Phone label="07 · Уже заполнено (readonly)">
+            <ReadonlyScreen questions={QUESTIONS} answers={ANSWERS} />
+          </Phone>
+
+        </DCSection>
+
+        {/* ── Административная панель ── */}
+        <DCSection title="Административная панель" subtitle="Веб-интерфейс для команды: список анкет, детальный просмотр, экспорт">
+
+          <AdminFrame label="08 · Список анкет" page="Анкеты" width={760} height={400}>
+            <AdminList />
+          </AdminFrame>
+
+          <AdminFrame label="09 · Детальный просмотр" page="Иванова Мария" width={640} height={460}>
+            <AdminDetail />
+          </AdminFrame>
+
+        </DCSection>
+      </DesignCanvas>
+
+      {hintVisible && (
+        <div className="dc-hint">
+          Scroll / pinch для зума · Тяни фон для перемещения
+        </div>
+      )}
+    </>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

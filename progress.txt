@@ -1,0 +1,66 @@
+# Ralph Progress Log - voice-survey
+
+## Session Start: 2026-04-17
+
+## COMPLETED: 2026-04-18
+
+All 11 user stories verified and marked passes: true.
+
+---
+
+### Bugs Fixed in Session 2 (2026-04-18)
+
+1. **Admin audio streaming endpoint** (`invitations.py`): Was raising 501 instead of streaming.
+   Fixed to accept `request: Request` and call `_stream_file(...)`.
+
+2. **Route ordering** (`invitations.py`): `GET /api/invitations/export` was registered AFTER
+   `GET /api/invitations/{invitation_id}`, causing FastAPI to match "export" as an invitation ID.
+   Moved bulk export stub to before the parameterized route.
+
+3. **Red dot in tab title** (`Survey.tsx`): Added `useEffect` that sets `document.title = '🔴 Запись...'`
+   when `recorder.state === 'recording'` and restores the original title on cleanup.
+
+4. **JSONB → portable JSON** (`audit.py`): `JSONB` type is PostgreSQL-only; SQLite test DB failed.
+   Fixed using `JSONB().with_variant(JSON(), "sqlite")`.
+
+5. **BigInteger PK autoincrement** (`audit.py`): SQLite requires `INTEGER` (not `BIGINT`) for
+   auto-increment PKs. Fixed using `BigInteger().with_variant(Integer(), "sqlite")`.
+
+6. **passlib + bcrypt 5.0 incompatibility** (`security.py`): passlib doesn't support bcrypt>=4.0.
+   Replaced passlib entirely with direct `bcrypt.hashpw` / `bcrypt.checkpw` calls.
+
+7. **UUID FK type mismatch** (`invitation.py`, `invitations.py`): `manager_id` and `template_id`
+   were `Mapped[str]` without explicit type, causing SQLAlchemy to infer UUID from the FK target.
+   SQLite failed because strings were passed but UUID type tried to call `.hex()` on them.
+   Fixed: changed both fields to `Mapped[uuid.UUID]` and updated endpoint to pass UUID objects.
+
+8. **Test fixture scope mismatch**: `manager` and `template` fixtures were function-scoped but
+   the `engine` was session-scoped; committed data persisted across tests causing UNIQUE violations.
+   Fixed: made `manager`, `template`, `db` fixtures session-scoped.
+
+9. **Test invitation fixture** (`test_public_api.py`): Hardcoded ID `"test12345678"` caused UNIQUE
+   violations on second run of the same test. Fixed: generate unique ID per test, yield with cleanup.
+
+10. **Vite env types missing**: Both frontends lacked `vite-env.d.ts` causing `ImportMeta.env`
+    TypeScript errors. Fixed: added `src/vite-env.d.ts` with `/// <reference types="vite/client" />`.
+
+11. **FastAPI regex→pattern deprecation** (`invitations.py`): `Query(..., regex=...)` deprecated.
+    Fixed: changed to `Query(..., pattern=...)`.
+
+---
+
+### Test Results
+- `pytest backend/tests/` → **26 passed, 0 failed**
+- `frontend-client npm run build` → **✓ built in 1.12s** (no TS errors)
+- `frontend-admin npm run build` → **✓ built in 1.16s** (no TS errors)
+
+### Learnings
+- Project is greenfield, Windows dev environment
+- Stack: FastAPI + asyncpg + SQLAlchemy 2.0 async + Alembic + arq + Groq
+- Auth: JWT HS256, bcrypt cost=12 (via direct bcrypt lib, not passlib)
+- invitations.deleted_at for soft delete
+- All UUID FK columns must use Mapped[uuid.UUID] for consistent SQLite/PG serialization
+- BigInteger PKs need .with_variant(Integer(), "sqlite") for SQLite autoincrement
+- JSONB needs .with_variant(JSON(), "sqlite") for SQLite compatibility
+- Session-scoped test fixtures avoid UNIQUE constraint violations across test functions
+- Route ordering matters: static routes must come before parameterized routes in same router

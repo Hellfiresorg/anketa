@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><title>Type · Font stack</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  body { margin: 0; padding: 22px; background: #fff; font-family: var(--font-sans); color: #111827; }
+  .sample { font-size: 28px; font-weight: 700; color: #102f6e; margin: 0 0 4px; letter-spacing: -0.01em; }
+  .cyr { font-size: 18px; font-weight: 500; color: #1f2937; margin: 0 0 14px; }
+  .stack { font: 500 11px/1.5 ui-monospace, Menlo, Consolas, monospace; color: #6b7280; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 10px 12px; }
+  .note { font-size: 11px; color: #9ca3af; margin-top: 8px; }
+</style></head>
+<body>
+  <div class="sample">Анкета · Aa · 1234567890</div>
+  <div class="cyr">АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ — абвгдеёжзийклмнопрстуфхцчшщъыьэюя</div>
+  <div class="stack">font-family: system-ui, -apple-system, BlinkMacSystemFont,<br>&nbsp;&nbsp;'Segoe UI', sans-serif;</div>
+  <div class="note">Никаких webfont'ов. Используется системный стек. Ни одной @font-face декларации в коде.</div>
+</body></html>

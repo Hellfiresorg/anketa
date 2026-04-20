@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><title>Form inputs</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  body { margin: 0; padding: 22px; background: #fff; font-family: var(--font-sans); }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px 22px; }
+  label { display: block; font-size: 14px; font-weight: 500; color: #374151; margin-bottom: 4px; }
+  input, select, textarea { width: 100%; border: 1px solid #d1d5db; border-radius: 8px; padding: 8px 12px; font: 400 16px/1.5 system-ui, sans-serif; box-sizing: border-box; }
+  input:focus, select:focus, textarea:focus { outline: none; box-shadow: 0 0 0 2px #102f6e; border-color: transparent; }
+  textarea { min-height: 60px; resize: none; }
+  .focused { box-shadow: 0 0 0 2px #102f6e; border-color: transparent !important; }
+</style></head>
+<body>
+  <div class="grid">
+    <div>
+      <label>Email</label>
+      <input placeholder="manager@example.com" value="anna@reception.ru">
+    </div>
+    <div>
+      <label>Пароль</label>
+      <input type="password" value="••••••••" class="focused">
+    </div>
+    <div>
+      <label>Шаблон анкеты</label>
+      <select><option>Приём клиента — 10 вопросов</option></select>
+    </div>
+    <div>
+      <label>Телефон</label>
+      <input placeholder="+7 999 000 0000">
+    </div>
+    <div style="grid-column: 1 / -1">
+      <label>Заметка (внутренняя)</label>
+      <textarea placeholder="Пришёл с рекламы Instagram...">Постоянный клиент, знакомы с 2023</textarea>
+    </div>
+  </div>
+</body></html>

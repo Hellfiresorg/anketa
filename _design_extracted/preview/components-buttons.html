@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><title>Buttons</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  :root { --p:#102f6e; --p7:#1e4898; --p5:#e8eef8; }
+  body { margin:0; padding:24px; background:#fff; font-family:var(--font-sans); color:#111827; }
+  .wrap { display: grid; grid-template-columns: 1fr 1fr; gap: 28px 36px; }
+  .group { display: flex; flex-direction: column; gap: 12px; }
+  .group h4 { margin: 0 0 2px; font-size: 11px; font-weight: 600; color: #9ca3af; letter-spacing: 0.06em; text-transform: uppercase; }
+  .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+
+  /* base reset */
+  button { font-family: inherit; cursor: pointer; border: 0; }
+
+  /* ----- Primary (admin) ----- */
+  .b-primary {
+    background: var(--p); color: #fff; font-weight: 600; font-size: 14px;
+    padding: 9px 16px; border-radius: 8px;
+    display: inline-flex; align-items: center; gap: 8px;
+    box-shadow: 0 1px 0 0 rgb(255 255 255 / 0.08) inset,
+                0 1px 2px 0 rgb(16 47 110 / 0.25);
+    transition: background 150ms ease, transform 150ms ease, box-shadow 150ms ease;
+  }
+  .b-primary:hover { background: var(--p7); box-shadow: 0 2px 6px 0 rgb(16 47 110 / 0.35); }
+  .b-primary.is-hover { background: var(--p7); box-shadow: 0 2px 6px 0 rgb(16 47 110 / 0.35); }
+  .b-primary.is-press { transform: scale(0.96); background: var(--p7); box-shadow: none; }
+  .b-primary.is-focus { outline: 2px solid var(--p); outline-offset: 2px; }
+  .b-primary.is-disabled { opacity: 0.45; cursor: not-allowed; }
+
+  /* plus icon */
+  .ic-plus::before { content: "+"; font-weight: 500; font-size: 16px; line-height: 1; margin-top: -1px; }
+  .ic-down::after { content: "▾"; font-size: 10px; opacity: 0.8; margin-left: 2px; }
+
+  /* ----- Secondary (outline) ----- */
+  .b-secondary {
+    background: #fff; color: #374151; font-weight: 500; font-size: 14px;
+    padding: 8px 16px; border-radius: 8px;
+    border: 1px solid #d1d5db;
+    display: inline-flex; align-items: center; gap: 8px;
+    transition: background 150ms ease, border-color 150ms ease, transform 150ms ease;
+  }
+  .b-secondary:hover { background: #f9fafb; border-color: #9ca3af; }
+  .b-secondary.is-press { transform: scale(0.96); background: #f3f4f6; }
+
+  /* ----- Ghost (text link) ----- */
+  .b-ghost {
+    background: transparent; color: #6b7280; font-weight: 500; font-size: 14px;
+    padding: 6px 10px; border-radius: 6px;
+    transition: color 150ms ease, background 150ms ease;
+  }
+  .b-ghost:hover { color: var(--p); background: var(--p5); }
+
+  /* ----- Danger ----- */
+  .b-danger-outline {
+    background: #fff; color: #ef4444; font-weight: 500; font-size: 14px;
+    padding: 8px 14px; border: 1px solid #fca5a5; border-radius: 8px;
+    transition: background 150ms ease;
+  }
+  .b-danger-outline:hover { background: #fef2f2; }
+  .b-danger-solid {
+    background: #ef4444; color: #fff; font-weight: 500; font-size: 14px;
+    padding: 7px 14px; border-radius: 8px;
+  }
+
+  /* ----- Client (rounded-2xl, larger) ----- */
+  .b-client {
+    background: var(--p); color: #fff; font-weight: 600;
+    padding: 14px 28px; border-radius: 16px; font-size: 16px;
+    display: inline-flex; align-items: center; gap: 10px;
+    box-shadow: 0 1px 2px 0 rgb(16 47 110 / 0.2);
+    transition: background 150ms ease, transform 150ms ease;
+  }
+  .b-client:hover { background: var(--p7); }
+  .b-client.is-press { transform: scale(0.96); }
+
+  .b-client-ghost {
+    background: #fff; color: var(--p); font-weight: 600;
+    padding: 12px 26px; border-radius: 16px; font-size: 16px;
+    border: 2px solid var(--p);
+    transition: background 150ms ease;
+  }
+  .b-client-ghost:hover { background: var(--p5); }
+
+  /* ----- Loading spinner ----- */
+  .spinner {
+    width: 14px; height: 14px; border: 2px solid rgba(255,255,255,0.4);
+    border-top-color: #fff; border-radius: 9999px;
+    animation: spin 0.7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ----- State labels ----- */
+  .state-label {
+    font: 500 10px/1 ui-monospace, Menlo, monospace;
+    color: #9ca3af; letter-spacing: 0.04em;
+  }
+
+  /* ----- Sizing rail ----- */
+  .sizes { display: flex; gap: 10px; align-items: flex-end; }
+  .size-xs { font-size: 12px; padding: 5px 10px; border-radius: 6px; }
+  .size-sm { font-size: 13px; padding: 7px 14px; border-radius: 8px; }
+  .size-md { font-size: 14px; padding: 9px 16px; border-radius: 8px; }
+  .size-lg { font-size: 15px; padding: 11px 20px; border-radius: 10px; }
+
+  /* ----- Icon-only button ----- */
+  .b-icon {
+    width: 36px; height: 36px; border-radius: 8px;
+    background: #fff; border: 1px solid #d1d5db;
+    display: inline-flex; align-items: center; justify-content: center;
+    color: #4b5563; font-size: 16px;
+    transition: background 150ms ease, color 150ms ease;
+  }
+  .b-icon:hover { background: #f9fafb; color: var(--p); }
+</style></head>
+<body>
+  <div class="wrap">
+
+    <div class="group">
+      <h4>Admin · Primary · все состояния</h4>
+      <div class="row">
+        <button class="b-primary ic-plus">Создать анкету</button>
+        <button class="b-primary is-hover ic-plus">Создать анкету</button>
+        <button class="b-primary is-press ic-plus">Создать анкету</button>
+        <button class="b-primary is-focus ic-plus">Создать анкету</button>
+      </div>
+      <div class="row">
+        <button class="b-primary is-disabled">Отправить</button>
+        <button class="b-primary"><span class="spinner"></span>Создание…</button>
+      </div>
+      <div class="row state-label">default · hover · press · focus · disabled · loading</div>
+    </div>
+
+    <div class="group">
+      <h4>Admin · Secondary · outline</h4>
+      <div class="row">
+        <button class="b-secondary ic-down">Экспорт</button>
+        <button class="b-secondary">Настройки</button>
+        <button class="b-secondary is-press">Отмена</button>
+      </div>
+      <div class="row">
+        <button class="b-icon">✎</button>
+        <button class="b-icon">↻</button>
+        <button class="b-icon">⋯</button>
+        <span class="state-label">icon-only · 36×36</span>
+      </div>
+    </div>
+
+    <div class="group">
+      <h4>Admin · Ghost · nav links</h4>
+      <div class="row">
+        <button class="b-ghost">← Назад</button>
+        <button class="b-ghost">Настройки</button>
+        <button class="b-ghost">Выйти</button>
+      </div>
+    </div>
+
+    <div class="group">
+      <h4>Admin · Danger · двухшаговое удаление</h4>
+      <div class="row">
+        <button class="b-danger-outline">Удалить</button>
+        <span style="color:#dc2626; font-size:13px">Удалить «Иван И.»?</span>
+        <button class="b-danger-solid">Да</button>
+        <button class="b-secondary" style="padding:6px 12px">Отмена</button>
+      </div>
+    </div>
+
+    <div class="group">
+      <h4>Client · крупные кнопки · rounded-2xl</h4>
+      <div class="row">
+        <button class="b-client">Начать</button>
+        <button class="b-client is-press">Далее →</button>
+        <button class="b-client-ghost">Перезаписать</button>
+      </div>
+    </div>
+
+    <div class="group">
+      <h4>Sizing rail · admin</h4>
+      <div class="sizes">
+        <button class="b-primary size-xs">xs</button>
+        <button class="b-primary size-sm">sm</button>
+        <button class="b-primary size-md">md ★</button>
+        <button class="b-primary size-lg">lg</button>
+      </div>
+      <div class="row state-label">12 · 13 · 14 ★ · 15 px</div>
+    </div>
+
+  </div>
+</body></html>

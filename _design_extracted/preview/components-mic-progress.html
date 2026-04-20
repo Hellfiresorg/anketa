@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><title>Mic & progress</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  :root { --p:#102f6e; }
+  body { margin:0; padding:28px 24px; background:#fff; font-family:var(--font-sans); display:flex; align-items:flex-start; gap:36px; flex-wrap:wrap; }
+  .col { display:flex; flex-direction:column; align-items:center; gap:10px; }
+  .lbl { font-size:11px; color:#9ca3af; font-family:ui-monospace,Menlo,monospace; letter-spacing:.04em; }
+
+  /* ── Mic button ── */
+  .mic-btn {
+    width:60px; height:60px; border-radius:9999px;
+    display:flex; align-items:center; justify-content:center;
+    box-shadow:0 1px 3px rgb(0 0 0/.12), 0 1px 2px -1px rgb(0 0 0/.08);
+  }
+  .mic-idle { background:var(--p); }
+  .mic-rec  { background:#ef4444; animation:blink 1.2s ease-in-out infinite; }
+  .mic-done { background:#16a34a; }
+  .mic-dis  { background:#d1d5db; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.55} }
+
+  /* rec ring pulse */
+  .mic-rec-wrap { position:relative; }
+  .mic-rec-wrap::before,
+  .mic-rec-wrap::after {
+    content:''; position:absolute; inset:-8px; border-radius:9999px;
+    border:1.5px solid rgba(239,68,68,.4);
+    animation:ring 1.4s ease-out infinite;
+  }
+  .mic-rec-wrap::after { animation-delay:.7s; }
+  @keyframes ring { 0%{transform:scale(1);opacity:.7} 100%{transform:scale(1.45);opacity:0} }
+
+  /* ── Progress bar ── */
+  .pbar-wrap { width:200px; display:flex; flex-direction:column; gap:6px; }
+  .pbar { height:6px; background:#f3f4f6; border-radius:3px; overflow:hidden; }
+  .pbar-fill { height:100%; border-radius:3px; background:var(--p); transition:width .3s ease; }
+  .pbar-label { display:flex; justify-content:space-between; font-size:11px; color:#9ca3af; }
+
+  /* ── Waveform (recording live) ── */
+  .wavebars { display:flex; align-items:center; gap:3px; height:32px; }
+  .wavebars span {
+    display:block; width:3.5px; border-radius:2px; background:#ef4444;
+    animation:wave 0.8s ease-in-out infinite alternate;
+  }
+  .wavebars span:nth-child(1) { animation-delay:.00s; }
+  .wavebars span:nth-child(2) { animation-delay:.10s; }
+  .wavebars span:nth-child(3) { animation-delay:.20s; }
+  .wavebars span:nth-child(4) { animation-delay:.30s; }
+  .wavebars span:nth-child(5) { animation-delay:.20s; }
+  .wavebars span:nth-child(6) { animation-delay:.10s; }
+  .wavebars span:nth-child(7) { animation-delay:.00s; }
+  @keyframes wave { from { height:4px; } to { height:28px; } }
+
+  /* ── Spinner ── */
+  .spinner {
+    width:32px; height:32px;
+    border:3px solid #e5e7eb; border-top-color:var(--p);
+    border-radius:9999px; animation:spin .75s linear infinite;
+  }
+  @keyframes spin { to { transform:rotate(360deg); } }
+
+  /* SVG icon shared style */
+  svg { display:block; }
+</style></head>
+<body>
+
+  <!-- idle -->
+  <div class="col">
+    <div class="mic-btn mic-idle">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="9" y="2" width="6" height="11" rx="3"/>
+        <path d="M5 10a7 7 0 0 0 14 0"/>
+        <line x1="12" y1="17" x2="12" y2="22"/>
+        <line x1="8" y1="22" x2="16" y2="22"/>
+      </svg>
+    </div>
+    <div class="lbl">idle</div>
+  </div>
+
+  <!-- recording -->
+  <div class="col">
+    <div class="mic-rec-wrap">
+      <div class="mic-btn mic-rec">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="9" y="2" width="6" height="11" rx="3"/>
+          <path d="M5 10a7 7 0 0 0 14 0"/>
+          <line x1="12" y1="17" x2="12" y2="22"/>
+          <line x1="8" y1="22" x2="16" y2="22"/>
+        </svg>
+      </div>
+    </div>
+    <div class="wavebars">
+      <span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+    </div>
+    <div class="lbl">recording</div>
+  </div>
+
+  <!-- done -->
+  <div class="col">
+    <div class="mic-btn mic-done">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="20 6 9 17 4 12"/>
+      </svg>
+    </div>
+    <div class="lbl">done</div>
+  </div>
+
+  <!-- disabled -->
+  <div class="col">
+    <div class="mic-btn mic-dis" style="cursor:not-allowed;">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="9" y="2" width="6" height="11" rx="3"/>
+        <path d="M5 10a7 7 0 0 0 14 0"/>
+        <line x1="12" y1="17" x2="12" y2="22"/>
+        <line x1="8" y1="22" x2="16" y2="22"/>
+      </svg>
+    </div>
+    <div class="lbl">disabled</div>
+  </div>
+
+  <!-- divider -->
+  <div style="width:1px;height:80px;background:#f3f4f6;align-self:center;"></div>
+
+  <!-- progress bar -->
+  <div class="col" style="align-items:stretch">
+    <div class="pbar-wrap">
+      <div class="pbar"><div class="pbar-fill" style="width:60%"></div></div>
+      <div class="pbar-label"><span>3 / 5 вопросов</span><span>60%</span></div>
+    </div>
+    <div class="pbar-wrap" style="margin-top:8px">
+      <div class="pbar"><div class="pbar-fill" style="width:100%;background:#16a34a"></div></div>
+      <div class="pbar-label"><span>Завершено</span><span>5 / 5</span></div>
+    </div>
+    <div class="lbl" style="margin-top:4px">progress bar</div>
+  </div>
+
+  <!-- divider -->
+  <div style="width:1px;height:80px;background:#f3f4f6;align-self:center;"></div>
+
+  <!-- spinner -->
+  <div class="col">
+    <div class="spinner"></div>
+    <div class="lbl">processing</div>
+  </div>
+
+</body></html>

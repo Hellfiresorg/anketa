@@ -1,0 +1,70 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: anketa-postgres
+    environment:
+      POSTGRES_USER: voice_survey
+      POSTGRES_PASSWORD: wLRXa_6AE2IAD0dhWy8YzryNyUM
+      POSTGRES_DB: voice_survey
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U voice_survey"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: anketa-redis
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  api:
+    build: ./backend
+    container_name: anketa-api
+    command: >
+      sh -c "python -m alembic upgrade head &&
+             uvicorn app.main:app --host 0.0.0.0 --port 8000"
+    ports:
+      - "127.0.0.1:8002:8000"
+    env_file: ./backend/.env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://voice_survey:wLRXa_6AE2IAD0dhWy8YzryNyUM@postgres:5432/voice_survey
+      REDIS_URL: redis://redis:6379/0
+      AUDIO_ROOT: /var/voice-survey/audio
+    volumes:
+      - audio_data:/var/voice-survey/audio
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  worker:
+    build: ./backend
+    container_name: anketa-worker
+    command: python -m arq app.workers.arq_worker.WorkerSettings
+    env_file: ./backend/.env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://voice_survey:wLRXa_6AE2IAD0dhWy8YzryNyUM@postgres:5432/voice_survey
+      REDIS_URL: redis://redis:6379/0
+      AUDIO_ROOT: /var/voice-survey/audio
+    volumes:
+      - audio_data:/var/voice-survey/audio
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  audio_data:

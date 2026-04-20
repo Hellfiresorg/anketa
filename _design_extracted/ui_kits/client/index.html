@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Анкета · Клиентская форма</title>
+  <link rel="stylesheet" href="client.css">
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel" src="ProgressBar.jsx"></script>
+  <script type="text/babel" src="WelcomeScreen.jsx"></script>
+  <script type="text/babel" src="QuestionScreen.jsx"></script>
+  <script type="text/babel" src="ReviewScreen.jsx"></script>
+  <script type="text/babel" src="StatusScreens.jsx"></script>
+
+  <script type="text/babel">
+    const { useState } = React;
+
+    const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+      "clientName": "Иван",
+      "startScreen": "welcome"
+    }/*EDITMODE-END*/;
+
+    const QUESTIONS = [
+      { id: 'q1', order_index: 1, text: 'С какой целью вы обращаетесь?', hint: 'Опишите вкратце в одном-двух предложениях', is_required: true },
+      { id: 'q2', order_index: 2, text: 'Как вы узнали о нас?', hint: null, is_required: true },
+      { id: 'q3', order_index: 3, text: 'Есть ли у вас особые пожелания или ограничения?', hint: 'Например, аллергии, предпочтения по времени', is_required: false },
+      { id: 'q4', order_index: 4, text: 'Удобный способ связи и время?', hint: null, is_required: true },
+    ];
+
+    function App() {
+      const [screen, setScreen] = useState(TWEAK_DEFAULTS.startScreen);
+      const [currentIdx, setCurrentIdx] = useState(0);
+      const [answers, setAnswers] = useState({
+        q1: 'Хочу получить консультацию по услугам. Интересует косметология и массаж.',
+      });
+      const [clientName, setClientName] = useState(TWEAK_DEFAULTS.clientName);
+      const [tweaksOn, setTweaksOn] = useState(false);
+
+      React.useEffect(() => {
+        const handler = (e) => {
+          if (e.data?.type === '__activate_edit_mode') setTweaksOn(true);
+          if (e.data?.type === '__deactivate_edit_mode') setTweaksOn(false);
+        };
+        window.addEventListener('message', handler);
+        window.parent.postMessage({ type: '__edit_mode_available' }, '*');
+        return () => window.removeEventListener('message', handler);
+      }, []);
+
+      const start = () => { setCurrentIdx(0); setScreen('answering'); };
+      const next = (text) => {
+        const q = QUESTIONS[currentIdx];
+        setAnswers(prev => ({ ...prev, [q.id]: text }));
+        if (currentIdx + 1 >= QUESTIONS.length) setScreen('review');
+        else setCurrentIdx(i => i + 1);
+      };
+      const edit = (idx) => { setCurrentIdx(idx); setScreen('answering'); };
+      const submit = () => {
+        setScreen('submitting');
+        setTimeout(() => setScreen('done'), 1200);
+      };
+
+      let body;
+      if (screen === 'welcome') body = <WelcomeScreen clientName={clientName} totalQuestions={QUESTIONS.length} onStart={start} />;
+      else if (screen === 'answering') body = <QuestionScreen question={QUESTIONS[currentIdx]} currentIdx={currentIdx} total={QUESTIONS.length} initialText={answers[QUESTIONS[currentIdx].id] || ''} onNext={next} />;
+      else if (screen === 'review') body = <ReviewScreen questions={QUESTIONS} answers={answers} onEdit={edit} onSubmit={submit} />;
+      else if (screen === 'submitting') body = <SubmittingScreen />;
+      else if (screen === 'done') body = <ThankYouScreen />;
+      else if (screen === 'readonly') body = <ReadonlyScreen questions={QUESTIONS} answers={answers} />;
+
+      return (
+        <>
+          <div className="phone">
+            <div className="phone-screen">
+              <div className="phone-notch"></div>
+              {body}
+            </div>
+          </div>
+
+          {tweaksOn && (
+            <div className="tweaks-panel">
+              <h3>Tweaks</h3>
+              <div className="tweaks-row">
+                <label>Имя клиента</label>
+                <input value={clientName} onChange={(e) => setClientName(e.target.value)} />
+              </div>
+              <div className="tweaks-row">
+                <label>Экран</label>
+                <select value={screen} onChange={(e) => setScreen(e.target.value)}>
+                  <option value="welcome">welcome</option>
+                  <option value="answering">answering</option>
+                  <option value="review">review</option>
+                  <option value="submitting">submitting</option>
+                  <option value="done">done</option>
+                  <option value="readonly">readonly (completed)</option>
+                </select>
+              </div>
+              <div className="tweaks-row">
+                <label>Вопрос #</label>
+                <select value={currentIdx} onChange={(e) => setCurrentIdx(Number(e.target.value))}>
+                  {QUESTIONS.map((q, i) => <option key={q.id} value={i}>{i + 1}. {q.text.slice(0, 24)}…</option>)}
+                </select>
+              </div>
+            </div>
+          )}
+        </>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>

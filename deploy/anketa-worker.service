@@ -1,0 +1,26 @@
+[Unit]
+Description=Anketa — arq transcription worker
+After=network.target redis.service
+Wants=redis.service
+
+[Service]
+Type=exec
+User=anketa
+Group=anketa
+WorkingDirectory=/opt/anketa/backend
+
+EnvironmentFile=/opt/anketa/backend/.env
+
+ExecStart=/opt/anketa/backend/.venv/bin/python -m arq app.workers.arq_worker.WorkerSettings
+
+Restart=on-failure
+RestartSec=10s
+
+LimitNOFILE=65536
+TimeoutStopSec=30
+
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

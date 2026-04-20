@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><title>Response card</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  :root { --p:#102f6e; --p7:#1e4898; --p5:#e8eef8; }
+  body { margin:0; padding:24px; background:#f3f4f6; font-family:var(--font-sans); display:flex; gap:20px; flex-wrap:wrap; align-items:flex-start; }
+
+  .card {
+    background:#fff; border:1px solid #e5e7eb; border-radius:16px;
+    padding:22px; width:340px;
+    box-shadow:0 1px 3px 0 rgb(0 0 0/.06), 0 1px 2px -1px rgb(0 0 0/.04);
+  }
+  .q-num { font-size:11px; font-weight:600; color:#9ca3af; letter-spacing:.06em; text-transform:uppercase; margin:0 0 4px; }
+  .q-text { font-size:15px; font-weight:600; color:#111827; margin:0 0 14px; line-height:1.4; }
+
+  .meta { display:flex; align-items:center; gap:8px; margin-bottom:16px; }
+  .chip { font-size:11px; font-weight:600; padding:3px 10px; border-radius:9999px; }
+  .chip-done { background:#dcfce7; color:#166534; }
+  .chip-proc { background:#dbeafe; color:#1e40af; }
+  .dur { font-size:12px; color:#9ca3af; }
+  .dot { width:3px; height:3px; border-radius:9999px; background:#d1d5db; }
+
+  /* ── Player ── */
+  .player {
+    background: linear-gradient(135deg, var(--p) 0%, #1a3f90 100%);
+    border-radius:12px; padding:14px 16px;
+    display:flex; align-items:center; gap:14px;
+    margin-bottom:14px;
+    box-shadow: 0 2px 8px 0 rgb(16 47 110/.22);
+  }
+
+  /* Play button — SVG centered perfectly */
+  .play-btn {
+    width:42px; height:42px; border-radius:9999px; flex-shrink:0;
+    background:rgba(255,255,255,.18); border:1.5px solid rgba(255,255,255,.35);
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer; transition:background 150ms ease, transform 150ms ease;
+    padding:0; /* no offset hacks */
+  }
+  .play-btn:hover { background:rgba(255,255,255,.28); transform:scale(1.07); }
+  .play-btn svg { display:block; }
+
+  .player-right { flex:1; min-width:0; display:flex; flex-direction:column; gap:8px; }
+
+  /* Waveform bars fill the full width */
+  .waveform {
+    display:flex; align-items:center; gap:2px; height:32px;
+    width:100%; /* stretch */
+  }
+  .waveform span {
+    display:block; flex:1; /* each bar takes equal share */
+    border-radius:2px;
+    background:rgba(255,255,255,.28);
+    min-width:0;
+  }
+  .waveform span.played { background:rgba(255,255,255,.9); }
+  .waveform span.head   { background:#fff; }
+
+  .player-times { display:flex; justify-content:space-between; font-size:11px; color:rgba(255,255,255,.6); }
+  .player-times .cur { color:#fff; font-weight:600; }
+
+  .retry-btn {
+    background:none; border:0; padding:0; font:inherit; font-size:12px;
+    color:var(--p); cursor:pointer; text-decoration:underline;
+    text-underline-offset:2px; margin-left:auto; display:block;
+  }
+  .retry-btn:hover { color:var(--p7); }
+
+  .transcript-label { font-size:11px; font-weight:600; color:#9ca3af; letter-spacing:.05em; text-transform:uppercase; margin:0 0 6px; }
+  .transcript {
+    font-size:14px; color:#374151; background:#f9fafb;
+    border-radius:8px; padding:12px 14px; line-height:1.6; margin:0;
+    border:1px solid #f3f4f6;
+  }
+
+  /* Processing */
+  .waveform-proc span { animation:pulse 1s ease-in-out infinite alternate; }
+  .waveform-proc span:nth-child(odd)  { animation-delay:.0s; }
+  .waveform-proc span:nth-child(even) { animation-delay:.5s; }
+  @keyframes pulse { from{opacity:.2} to{opacity:.85} }
+
+  .transcript-placeholder {
+    font-size:13px; color:#9ca3af; font-style:italic;
+    background:#f9fafb; border-radius:8px; padding:12px 14px;
+    border:1px dashed #e5e7eb;
+  }
+
+  .state-tag { font-size:10px; color:#9ca3af; text-align:center; margin-top:10px; font-family:ui-monospace,Menlo,monospace; letter-spacing:.04em; }
+</style></head>
+<body>
+
+<!-- ────── CARD 1: playing ────── -->
+<div>
+<div class="card">
+  <p class="q-num">Вопрос 3 / 6</p>
+  <p class="q-text">Расскажите, как вы узнали о нас.</p>
+  <div class="meta">
+    <span class="chip chip-done">Готово</span>
+    <span class="dot"></span>
+    <span class="dur">0:12</span>
+  </div>
+  <div class="player">
+    <!-- SVG pause — perfectly centred by viewBox -->
+    <button class="play-btn" aria-label="Пауза">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <rect x="3" y="2" width="4" height="12" rx="1.5" fill="white"/>
+        <rect x="9" y="2" width="4" height="12" rx="1.5" fill="white"/>
+      </svg>
+    </button>
+    <div class="player-right">
+      <div class="waveform" id="wf1"></div>
+      <div class="player-times"><span class="cur">0:04</span><span>0:12</span></div>
+    </div>
+  </div>
+  <p class="transcript-label">Транскрипция</p>
+  <p class="transcript">Я узнала от подруги, она у вас была в марте и очень рекомендовала. Сказала, что обслуживание на высшем уровне.</p>
+  <button class="retry-btn">Повторить распознавание</button>
+</div>
+<p class="state-tag">playing · 33% progress</p>
+</div>
+
+<!-- ────── CARD 2: paused ────── -->
+<div>
+<div class="card">
+  <p class="q-num">Вопрос 5 / 6</p>
+  <p class="q-text">Что могли бы улучшить в нашем сервисе?</p>
+  <div class="meta">
+    <span class="chip chip-done">Готово</span>
+    <span class="dot"></span>
+    <span class="dur">0:27</span>
+  </div>
+  <div class="player">
+    <!-- SVG play — perfectly centred, slight rightward optical shift built into viewBox -->
+    <button class="play-btn" aria-label="Play">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <path d="M4 2.5L13 8L4 13.5V2.5Z" fill="white"/>
+      </svg>
+    </button>
+    <div class="player-right">
+      <div class="waveform" id="wf2"></div>
+      <div class="player-times"><span class="cur">0:00</span><span>0:27</span></div>
+    </div>
+  </div>
+  <p class="transcript-label">Транскрипция</p>
+  <p class="transcript">Хотелось бы чуть быстрее отвечать на звонки. В остальном всё очень нравится, особенно вежливость персонала и чистота.</p>
+</div>
+<p class="state-tag">paused · 0% progress</p>
+</div>
+
+<!-- ────── CARD 3: processing ────── -->
+<div>
+<div class="card">
+  <p class="q-num">Вопрос 2 / 6</p>
+  <p class="q-text">Оцените качество обслуживания.</p>
+  <div class="meta">
+    <span class="chip chip-proc">Обрабатывается</span>
+    <span class="dot"></span>
+    <span class="dur">0:09</span>
+  </div>
+  <div class="player">
+    <button class="play-btn" aria-label="Play" style="opacity:.4;cursor:not-allowed">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <path d="M4 2.5L13 8L4 13.5V2.5Z" fill="white"/>
+      </svg>
+    </button>
+    <div class="player-right">
+      <div class="waveform waveform-proc" id="wf3"></div>
+      <div class="player-times"><span class="cur" style="color:rgba(255,255,255,.4)">—</span><span>0:09</span></div>
+    </div>
+  </div>
+  <div class="transcript-placeholder">Транскрипция появится после обработки…</div>
+</div>
+<p class="state-tag">processing · transcription pending</p>
+</div>
+
+<script>
+const HEIGHTS = [8,12,20,16,26,22,30,18,24,28,32,24,20,16,12,24,18,26,14,10,22,16,28,20,24];
+
+function makeWave(id, playedFraction) {
+  const el = document.getElementById(id);
+  const n = HEIGHTS.length;
+  const headIdx = Math.round(playedFraction * n);
+  HEIGHTS.forEach((h, i) => {
+    const s = document.createElement('span');
+    s.style.height = h + 'px';
+    if (i < headIdx) s.classList.add('played');
+    else if (i === headIdx) s.classList.add('head');
+    el.appendChild(s);
+  });
+}
+
+function makeWaveProc(id) {
+  const el = document.getElementById(id);
+  HEIGHTS.forEach(h => {
+    const s = document.createElement('span');
+    s.style.height = h + 'px';
+    el.appendChild(s);
+  });
+}
+
+makeWave('wf1', 0.33);
+makeWave('wf2', 0);
+makeWaveProc('wf3');
+</script>
+</body></html>

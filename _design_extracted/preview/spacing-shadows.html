@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><title>Shadows</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  body { margin: 0; padding: 24px; background: #f9fafb; font-family: var(--font-sans); }
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .cell { display: flex; flex-direction: column; align-items: center; gap: 10px; padding-top: 4px; }
+  .box { width: 132px; height: 70px; background: #fff; border-radius: 10px; }
+  .n { font: 600 12px/1 var(--font-sans); color: #374151; }
+  .v { font: 500 10px/1 ui-monospace, Menlo, monospace; color: #9ca3af; text-align: center; }
+</style></head>
+<body>
+  <div class="grid">
+    <div class="cell">
+      <div class="box" style="box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05)"></div>
+      <div class="n">shadow-sm</div><div class="v">login card</div>
+    </div>
+    <div class="cell">
+      <div class="box" style="box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1)"></div>
+      <div class="n">shadow (md)</div><div class="v">floating mic button</div>
+    </div>
+    <div class="cell">
+      <div class="box" style="box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)"></div>
+      <div class="n">shadow-lg</div><div class="v">export dropdown</div>
+    </div>
+  </div>
+</body></html>

@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Анкета · Все экраны</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #faf9f5; display: flex; align-items: center; justify-content: center; min-height: 100vh; font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
+    #__bundler_loading { position: fixed; bottom: 20px; right: 20px; font: 13px/1.4 -apple-system, BlinkMacSystemFont, sans-serif; color: #666; background: #fff; padding: 8px 14px; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.12); z-index: 10000; }
+    #__bundler_thumbnail { position: fixed; inset: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: #faf9f5; z-index: 9999; }
+    #__bundler_thumbnail svg { width: 100%; height: 100%; object-fit: contain; }
+    #__bundler_placeholder { color: #999; font-size: 14px; }
+  </style>
+  <noscript>
+    <style>#__bundler_loading { display: none; }</style>
+    <div style="position:fixed;bottom:12px;left:12px;font:13px/1.4 -apple-system,BlinkMacSystemFont,sans-serif;color:#999;background:rgba(255,255,255,0.9);padding:6px 12px;border-radius:6px;box-shadow:0 1px 4px rgba(0,0,0,0.08);z-index:10000;">
+      This page requires JavaScript to display.
+    </div>
+  </noscript>
+</head>
+<body>
+  <div id="__bundler_thumbnail">
+  <svg viewBox="0 0 120 80" xmlns="http://www.w3.org/2000/svg">
+    <rect width="120" height="80" fill="#f0eee9"></rect>
+    <rect x="10" y="10" width="20" height="36" rx="4" fill="#111827"></rect>
+    <rect x="11.5" y="11.5" width="17" height="33" rx="3" fill="#fff"></rect>
+    <rect x="36" y="10" width="20" height="36" rx="4" fill="#111827"></rect>
+    <rect x="37.5" y="11.5" width="17" height="33" rx="3" fill="#fff"></rect>
+    <rect x="62" y="10" width="20" height="36" rx="4" fill="#111827"></rect>
+    <rect x="63.5" y="11.5" width="17" height="33" rx="3" fill="#fff"></rect>
+    <rect x="13" y="14" width="8" height="8" rx="1.5" fill="#102f6e"></rect>
+    <text x="17" y="21" text-anchor="middle" font-size="5" font-weight="700" fill="#fff" font-family="system-ui">А</text>
+  </svg>
+</div>
+  <div id="__bundler_loading">Unpacking...</div>
+
+  <script>
+    
+document.addEventListener('DOMContentLoaded', async function() {
+  const loading = document.getElementById('__bundler_loading');
+  function setStatus(msg) { if (loading) loading.textContent = msg; }
+
+  // Error sink persists across replaceWith since it's on window, not the DOM.
+  window.addEventListener('error', function(e) {
+    var p = document.body || document.documentElement;
+    var d = document.getElementById('__bundler_err') || p.appendChild(document.createElement('div'));
+    d.id = '__bundler_err';
+    d.style.cssText = 'position:fixed;bottom:12px;left:12px;right:12px;font:12px/1.4 ui-monospace,monospace;background:#2a1215;color:#ff8a80;padding:10px 14px;border-radius:8px;border:1px solid #5c2b2e;z-index:99999;white-space:pre-wrap;max-height:40vh;overflow:auto';
+    d.textContent = (d.textContent ? d.textContent + String.fromCharCode(10) : '') +
+      '[bundle] ' + (e.message || e.type) +
+      (e.filename ? ' (' + e.filename.slice(0, 60) + ':' + e.lineno + ')' : '');
+  }, true);
+
+  try {
+    const manifestEl = document.querySelector('script[type="__bundler/manifest"]');
+    const templateEl = document.querySelector('script[type="__bundler/template"]');
+    if (!manifestEl || !templateEl) {
+      setStatus('Error: missing bundle data');
+      console.error('[bundler] Missing script tags — manifestEl:', !!manifestEl, 'templateEl:', !!templateEl);
+      return;
+    }
+
+    const manifest = JSON.parse(manifestEl.textContent);
+    let template = JSON.parse(templateEl.textContent);
+
+    const uuids = Object.keys(manifest);
+    setStatus('Unpacking ' + uuids.length + ' assets...');
+
+    const blobUrls = {};
+    await Promise.all(uuids.map(async (uuid) => {
+      const entry = manifest[uuid];
+      try {
+        const binaryStr = atob(entry.data);
+        const bytes = new Uint8Array(binaryStr.length);
+        for (let i = 0; i < binaryStr.length; i++) bytes[i] = binaryStr.charCodeAt(i);
+
+        let finalBytes = bytes;
+        if (entry.compressed) {
+          if (typeof DecompressionStream !== 'undefined') {
+            const ds = new DecompressionStream('gzip');
+            const writer = ds.writable.getWriter();
+            const reader = ds.readable.getReader();
+            writer.write(bytes);
+            writer.close();
+            const chunks = [];
+            let totalLen = 0;
+            while (true) {
+              const { done, value } = await reader.read();
+              if (done) break;
+              chunks.push(value);
+              totalLen += value.length;
+            }
+            finalBytes = new Uint8Array(totalLen);
+            let offset = 0;
+            for (const chunk of chunks) { finalBytes.set(chunk, offset); offset += chunk.length; }
+          } else {
+            console.warn('DecompressionStream not available, asset ' + uuid + ' may not render');
+          }
+        }
+
+        blobUrls[uuid] = URL.createObjectURL(new Blob([finalBytes], { type: entry.mime }));
+      } catch (err) {
+        console.error('Failed to decode asset ' + uuid + ':', err);
+        blobUrls[uuid] = URL.createObjectURL(new Blob([], { type: entry.mime }));
+      }
+    }));
+
+    const extResEl = document.querySelector('script[type="__bundler/ext_resources"]');
+    const extResources = extResEl ? JSON.parse(extResEl.textContent) : [];
+    const resourceMap = {};
+    for (const entry of extResources) {
+      if (blobUrls[entry.uuid]) resourceMap[entry.id] = blobUrls[entry.uuid];
+    }
+
+    setStatus('Rendering...');
+    for (const uuid of uuids) template = template.split(uuid).join(blobUrls[uuid]);
+
+    // Strip integrity + crossorigin — blob URLs from a file:// document inherit
+    // a null origin, so crossorigin forces a CORS fetch that SRI then rejects.
+    // The manifest bytes are ours; SRI protects against CDN compromise, not this.
+    template = template.replace(/\s+integrity="[^"]*"/gi, '').replace(/\s+crossorigin="[^"]*"/gi, '');
+
+    const resourceScript = '<script>window.__resources = ' +
+      JSON.stringify(resourceMap).split('</' + 'script>').join('<\\/' + 'script>') +
+      ';</' + 'script>';
+    // Inject after <head> so the DOCTYPE stays first; prepending the script
+    // would push the parser into quirks mode. DOMParser always emits a <head>
+    // (synthesizing one if the source HTML omitted it) but may carry
+    // attributes through, so match the full opening tag. slice() rather than
+    // replace() keeps us clear of $-pattern substitution in resourceScript.
+    const headOpen = template.match(/<head[^>]*>/i);
+    if (headOpen) {
+      const i = headOpen.index + headOpen[0].length;
+      template = template.slice(0, i) + resourceScript + template.slice(i);
+    }
+
+    // Parse the template and swap the root element. Scripts inserted via
+    // DOMParser/replaceWith are inert per spec — re-create each with
+    // createElement so they execute, awaiting onload for src scripts to
+    // preserve ordering (React before ReactDOM before Babel before text/babel).
+    const doc = new DOMParser().parseFromString(template, 'text/html');
+    document.documentElement.replaceWith(doc.documentElement);
+    const dead = Array.from(document.scripts);
+    for (const old of dead) {
+      const s = document.createElement('script');
+      for (const a of old.attributes) s.setAttribute(a.name, a.value);
+      s.textContent = old.textContent;
+      // text/babel scripts with a src: fetch and inline. transformScriptTags
+      // does XHR against the src, but blob:null/ from a file:// origin is
+      // silently dropped. Inlining makes it a plain inline babel script,
+      // which transformScriptTags handles unconditionally.
+      if ((s.type === 'text/babel' || s.type === 'text/jsx') && s.src) {
+        const r = await fetch(s.src);
+        s.textContent = await r.text();
+        s.removeAttribute('src');
+      }
+      const p = s.src ? new Promise(function(r) { s.onload = s.onerror = r; }) : null;
+      old.replaceWith(s);
+      if (p) await p;
+    }
+    // Babel standalone auto-transforms type=text/babel on DOMContentLoaded,
+    // which fired before we swapped the document. Trigger manually if present.
+    if (window.Babel && typeof window.Babel.transformScriptTags === 'function') {
+      window.Babel.transformScriptTags();
+    }
+  } catch (err) {
+    setStatus('Error unpacking: ' + err.message);
+    console.error('Bundle unpack error:', err);
+  }
+});
+
+  </script>
+
+  <script type="__bundler/manifest">
+{}
+  </script>
+
+  <script type="__bundler/ext_resources">
+[]
+  </script>
+
+  <script type="__bundler/template">
+"<!DOCTYPE html>\n<html lang=\"ru\"><head>\n<meta charset=\"utf-8\">\n<title>Анкета · Все экраны<\u002Ftitle>\n\n<style>\n* { box-sizing: border-box; margin: 0; padding: 0; }\nbody {\n  background: #f0eee9;\n  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;\n  -webkit-font-smoothing: antialiased;\n  padding: 48px 60px 80px;\n}\nh2 {\n  font-size: 20px; font-weight: 600; color: rgba(40,30,20,.85);\n  letter-spacing: -0.3px; margin-bottom: 6px;\n}\n.sub { font-size: 13px; color: rgba(60,50,40,.55); margin-bottom: 32px; }\n.row { display: flex; gap: 40px; align-items: flex-start; margin-bottom: 72px; flex-wrap: wrap; }\n.ab { flex-shrink: 0; }\n.ab-label {\n  font-size: 11px; font-weight: 500; color: rgba(60,50,40,.6);\n  margin-bottom: 8px; white-space: nowrap;\n}\n.phone {\n  width: 240px; height: 480px;\n  background: #111827; border-radius: 32px; padding: 8px;\n  box-shadow: 0 20px 40px -12px rgba(0,0,0,.3);\n}\n.screen {\n  width: 100%; height: 100%; background: #fff; border-radius: 26px;\n  overflow: hidden; position: relative;\n}\n.notch {\n  position: absolute; top: 0; left: 50%; transform: translateX(-50%);\n  width: 72px; height: 18px; background: #111827; border-radius: 0 0 12px 12px; z-index: 2;\n}\n/* shared screen content */\n.s { width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; padding: 30px 16px 20px; }\n.logo-mark {\n  width: 36px; height: 36px; border-radius: 7px; background: #102f6e;\n  color: #fff; font-size: 16px; font-weight: 700;\n  display: flex; align-items: center; justify-content: center; margin-bottom: 20px; margin-top: 6px;\n}\n.h1 { font-size: 19px; font-weight: 700; color: #102f6e; text-align: center; margin-bottom: 8px; }\n.body { font-size: 11px; color: #6b7280; text-align: center; margin-bottom: 6px; line-height: 1.5; }\n.cap { font-size: 10px; color: #9ca3af; text-align: center; margin-bottom: 20px; }\n.btn {\n  background: #102f6e; color: #fff; border-radius: 12px;\n  font-size: 14px; font-weight: 600; padding: 10px 28px; border: none; cursor: pointer;\n}\n/* progress bar */\n.pbar { position: absolute; top: 0; left: 0; right: 0; height: 4px; background: #f3f4f6; }\n.pfill { height: 4px; background: #102f6e; }\n/* question screen */\n.q-cap { font-size: 9px; color: #9ca3af; margin-bottom: 4px; }\n.q-text { font-size: 13px; font-weight: 600; color: #111827; text-align: center; margin-bottom: 6px; line-height: 1.4; }\n.q-hint { font-size: 10px; color: #6b7280; font-style: italic; text-align: center; margin-bottom: 14px; }\n.textarea {\n  width: 100%; min-height: 80px; border: 1px solid #d1d5db; border-radius: 8px;\n  padding: 10px 42px 10px 10px; font-size: 11px; color: #374151; resize: none;\n  line-height: 1.5; position: relative;\n}\n.mic {\n  position: absolute; bottom: 8px; right: 8px;\n  width: 28px; height: 28px; border-radius: 9999px; background: #102f6e;\n  display: flex; align-items: center; justify-content: center;\n}\n.ta-wrap { position: relative; width: 100%; margin-bottom: 14px; }\n.btn-full { width: 100%; font-size: 13px; padding: 9px; }\n/* review */\n.rev-h { font-size: 15px; font-weight: 700; color: #102f6e; margin-bottom: 4px; }\n.rev-sub { font-size: 10px; color: #6b7280; margin-bottom: 12px; }\n.rev-item { border: 1px solid #e5e7eb; border-radius: 8px; padding: 10px; margin-bottom: 8px; width: 100%; }\n.rev-q { font-size: 10px; font-weight: 600; color: #374151; margin-bottom: 4px; }\n.rev-a { font-size: 10px; color: #4b5563; background: #f9fafb; border-radius: 4px; padding: 5px 7px; }\n/* thank you */\n.check-circle {\n  width: 52px; height: 52px; border-radius: 9999px; background: #dcfce7;\n  display: flex; align-items: center; justify-content: center; margin-bottom: 18px;\n}\n/* admin */\n.admin-frame {\n  background: #f9fafb; border-radius: 8px;\n  box-shadow: 0 1px 3px rgba(0,0,0,.08), 0 4px 16px rgba(0,0,0,.06);\n  overflow: hidden;\n}\n.admin-nav {\n  background: #fff; border-bottom: 1px solid #e5e7eb;\n  padding: 9px 16px; display: flex; align-items: center; gap: 8px; font-size: 12px;\n}\n.nav-logo { width: 22px; height: 22px; border-radius: 4px; background: #102f6e; color: #fff; font-size: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center; }\n.nav-brand { font-weight: 600; color: #102f6e; font-size: 13px; }\n.nav-sep { color: #d1d5db; }\n.nav-page { color: #6b7280; font-size: 12px; }\n.nav-right { margin-left: auto; color: #9ca3af; font-size: 11px; }\n.admin-body { padding: 16px; }\n/* table */\n.filters { display: flex; gap: 8px; margin-bottom: 14px; }\n.a-input { border: 1px solid #d1d5db; border-radius: 6px; padding: 5px 9px; font-size: 11px; background: #fff; flex: 1; }\n.a-btn { background: #102f6e; color: #fff; font-weight: 600; font-size: 11px; padding: 5px 10px; border-radius: 6px; border: none; white-space: nowrap; }\n.a-sel { border: 1px solid #d1d5db; border-radius: 6px; padding: 5px 8px; font-size: 11px; background: #fff; width: 120px; }\n.tbl { width: 100%; border-collapse: collapse; font-size: 11px; }\n.tbl thead tr { background: #f9fafb; border-bottom: 1px solid #e5e7eb; }\n.tbl th { text-align: left; padding: 8px 12px; font-weight: 500; color: #4b5563; font-size: 10px; }\n.tbl tbody tr { border-bottom: 1px solid #f3f4f6; }\n.tbl tbody tr:last-child { border: 0; }\n.tbl td { padding: 9px 12px; color: #374151; }\n.tbl td.n { font-weight: 500; color: #111827; }\n.tbl td.m { color: #6b7280; }\n.chip { display: inline-block; font-size: 10px; font-weight: 500; padding: 2px 8px; border-radius: 9999px; }\n.cd { background: #dcfce7; color: #166534; }\n.cp { background: #dbeafe; color: #1e40af; }\n.cw { background: #fef3c7; color: #92400e; }\n/* detail */\n.bc { display: flex; align-items: center; gap: 6px; font-size: 11px; color: #9ca3af; margin-bottom: 12px; }\n.bc a { color: #9ca3af; }\n.bc .cur { color: #374151; font-weight: 500; }\n.dh { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; }\n.d-name { font-size: 15px; font-weight: 700; color: #111827; }\n.d-ph { font-size: 11px; color: #6b7280; margin-top: 2px; }\n.d-dt { font-size: 10px; color: #9ca3af; margin-top: 2px; }\n.q-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px; margin-bottom: 10px; }\n.q-title { font-size: 11px; font-weight: 600; color: #1f2937; margin-bottom: 8px; }\n.player { background: linear-gradient(135deg,#102f6e,#1a3f90); border-radius: 7px; padding: 9px 12px; display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }\n.play-btn { width: 26px; height: 26px; border-radius: 9999px; background: rgba(255,255,255,.2); border: 1.5px solid rgba(255,255,255,.3); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }\n.wf { flex: 1; display: flex; align-items: center; gap: 1.5px; height: 18px; }\n.wf span { flex: 1; border-radius: 1.5px; }\n.wf span.p { background: rgba(255,255,255,.9); }\n.wf span.u { background: rgba(255,255,255,.25); }\n.times { display: flex; justify-content: space-between; font-size: 9px; color: rgba(255,255,255,.6); margin-top: 3px; }\n.times .cur { color: #fff; font-weight: 600; }\n.transcript { font-size: 10px; color: #374151; background: #f9fafb; border-radius: 5px; padding: 8px 10px; line-height: 1.55; }\n<\u002Fstyle>\n<\u002Fhead>\n<body>\n\n<!-- ── CLIENT FLOW ── -->\n<h2>Клиентский флоу<\u002Fh2>\n<p class=\"sub\">Ссылка приходит в SMS → клиент открывает в браузере → заполняет голосом или текстом<\u002Fp>\n<div class=\"row\">\n\n  <!-- 01 Welcome -->\n  <div class=\"ab\">\n    <div class=\"ab-label\">01 · Приветствие<\u002Fdiv>\n    <div class=\"phone\"><div class=\"screen\">\n      <div class=\"notch\"><\u002Fdiv>\n      <div class=\"s\" style=\"justify-content:center\">\n        <div class=\"logo-mark\">А<\u002Fdiv>\n        <div class=\"h1\">Добро пожаловать, Мария!<\u002Fdiv>\n        <div class=\"body\">Вам предстоит ответить на <strong>4<\u002Fstrong> вопроса.<\u002Fdiv>\n        <div class=\"cap\" style=\"margin-bottom:24px\">Примерное время: 6 минут<\u002Fdiv>\n        <button class=\"btn\">Начать<\u002Fbutton>\n      <\u002Fdiv>\n    <\u002Fdiv><\u002Fdiv>\n  <\u002Fdiv>\n\n  <!-- 02 Question empty -->\n  <div class=\"ab\">\n    <div class=\"ab-label\">02 · Вопрос (пустой)<\u002Fdiv>\n    <div class=\"phone\"><div class=\"screen\">\n      <div class=\"notch\"><\u002Fdiv>\n      <div class=\"pbar\"><div class=\"pfill\" style=\"width:25%\"><\u002Fdiv><\u002Fdiv>\n      <div class=\"s\" style=\"justify-content:center;padding-top:40px\">\n        <div class=\"q-cap\">Вопрос 1 из 4<\u002Fdiv>\n        <div class=\"q-text\">С какой целью вы обращаетесь?<\u002Fdiv>\n        <div class=\"q-hint\">Опишите вкратце в одном-двух предложениях<\u002Fdiv>\n        <div class=\"ta-wrap\">\n          <div class=\"textarea\" style=\"color:#9ca3af\">Введите ответ или нажмите кнопку микрофона для голосового ввода<\u002Fdiv>\n          <div class=\"mic\">\n            <svg width=\"12\" height=\"12\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#fff\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\">\n              <rect x=\"9\" y=\"2\" width=\"6\" height=\"11\" rx=\"3\"><\u002Frect><path d=\"M5 10a7 7 0 0 0 14 0\"><\u002Fpath><line x1=\"12\" y1=\"17\" x2=\"12\" y2=\"22\"><\u002Fline><line x1=\"8\" y1=\"22\" x2=\"16\" y2=\"22\"><\u002Fline>\n            <\u002Fsvg>\n          <\u002Fdiv>\n        <\u002Fdiv>\n        <button class=\"btn btn-full\" disabled=\"\" style=\"opacity:.4\">Далее →<\u002Fbutton>\n      <\u002Fdiv>\n    <\u002Fdiv><\u002Fdiv>\n  <\u002Fdiv>\n\n  <!-- 03 Question with answer -->\n  <div class=\"ab\">\n    <div class=\"ab-label\">03 · Вопрос (с ответом)<\u002Fdiv>\n    <div class=\"phone\"><div class=\"screen\">\n      <div class=\"notch\"><\u002Fdiv>\n      <div class=\"pbar\"><div class=\"pfill\" style=\"width:50%\"><\u002Fdiv><\u002Fdiv>\n      <div class=\"s\" style=\"justify-content:center;padding-top:40px\">\n        <div class=\"q-cap\">Вопрос 2 из 4<\u002Fdiv>\n        <div class=\"q-text\">Как вы узнали о нас?<\u002Fdiv>\n        <div class=\"ta-wrap\">\n          <div class=\"textarea\">Узнала от подруги, она у вас была в марте и очень рекомендовала.<\u002Fdiv>\n          <div class=\"mic\">\n            <svg width=\"12\" height=\"12\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#fff\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\">\n              <rect x=\"9\" y=\"2\" width=\"6\" height=\"11\" rx=\"3\"><\u002Frect><path d=\"M5 10a7 7 0 0 0 14 0\"><\u002Fpath><line x1=\"12\" y1=\"17\" x2=\"12\" y2=\"22\"><\u002Fline><line x1=\"8\" y1=\"22\" x2=\"16\" y2=\"22\"><\u002Fline>\n            <\u002Fsvg>\n          <\u002Fdiv>\n        <\u002Fdiv>\n        <button class=\"btn btn-full\">Далее →<\u002Fbutton>\n      <\u002Fdiv>\n    <\u002Fdiv><\u002Fdiv>\n  <\u002Fdiv>\n\n  <!-- 04 Review -->\n  <div class=\"ab\">\n    <div class=\"ab-label\">04 · Проверка ответов<\u002Fdiv>\n    <div class=\"phone\"><div class=\"screen\">\n      <div class=\"notch\"><\u002Fdiv>\n      <div class=\"s\" style=\"padding-top:36px;align-items:flex-start\">\n        <div class=\"rev-h\">Проверьте ответы<\u002Fdiv>\n        <div class=\"rev-sub\">Нажмите на вопрос, чтобы отредактировать.<\u002Fdiv>\n        <div class=\"rev-item\">\n          <div class=\"rev-q\">1. С какой целью вы обращаетесь?<\u002Fdiv>\n          <div class=\"rev-a\">Хочу получить консультацию по услугам.<\u002Fdiv>\n        <\u002Fdiv>\n        <div class=\"rev-item\">\n          <div class=\"rev-q\">2. Как вы узнали о нас?<\u002Fdiv>\n          <div class=\"rev-a\">Узнала от подруги, она у вас была в марте.<\u002Fdiv>\n        <\u002Fdiv>\n        <div class=\"rev-item\">\n          <div class=\"rev-q\">3. Особые пожелания?<\u002Fdiv>\n          <div class=\"rev-a\" style=\"color:#d97706\">Нет ответа<\u002Fdiv>\n        <\u002Fdiv>\n        <div class=\"rev-item\">\n          <div class=\"rev-q\">4. Удобный способ связи?<\u002Fdiv>\n          <div class=\"rev-a\">WhatsApp, после 17:00<\u002Fdiv>\n        <\u002Fdiv>\n        <button class=\"btn btn-full\" style=\"margin-top:8px\">Отправить анкету<\u002Fbutton>\n      <\u002Fdiv>\n    <\u002Fdiv><\u002Fdiv>\n  <\u002Fdiv>\n\n  <!-- 05 Submitting -->\n  <div class=\"ab\">\n    <div class=\"ab-label\">05 · Отправка<\u002Fdiv>\n    <div class=\"phone\"><div class=\"screen\">\n      <div class=\"notch\"><\u002Fdiv>\n      <div class=\"s\" style=\"justify-content:center;text-align:center\">\n        <div style=\"width:28px;height:28px;border:3px solid #e5e7eb;border-top-color:#102f6e;border-radius:9999px;margin:0 auto 16px;\"><\u002Fdiv>\n        <div style=\"font-size:13px;color:#6b7280\">Отправляем анкету...<\u002Fdiv>\n      <\u002Fdiv>\n    <\u002Fdiv><\u002Fdiv>\n  <\u002Fdiv>\n\n  <!-- 06 Done -->\n  <div class=\"ab\">\n    <div class=\"ab-label\">06 · Спасибо<\u002Fdiv>\n    <div class=\"phone\"><div class=\"screen\">\n      <div class=\"notch\"><\u002Fdiv>\n      <div class=\"s\" style=\"justify-content:center;text-align:center\">\n        <div class=\"check-circle\">\n          <svg width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#16a34a\" stroke-width=\"2.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><polyline points=\"20 6 9 17 4 12\"><\u002Fpolyline><\u002Fsvg>\n        <\u002Fdiv>\n        <div class=\"h1\" style=\"font-size:18px;margin-bottom:10px\">Спасибо!<\u002Fdiv>\n        <div class=\"body\">Ваша анкета успешно отправлена. Мы свяжемся с вами в ближайшее время.<\u002Fdiv>\n      <\u002Fdiv>\n    <\u002Fdiv><\u002Fdiv>\n  <\u002Fdiv>\n\n  <!-- 07 Readonly -->\n  <div class=\"ab\">\n    <div class=\"ab-label\">07 · Уже заполнено<\u002Fdiv>\n    <div class=\"phone\"><div class=\"screen\">\n      <div class=\"notch\"><\u002Fdiv>\n      <div class=\"s\" style=\"padding-top:36px;align-items:flex-start\">\n        <div style=\"background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:10px;text-align:center;width:100%;margin-bottom:14px\">\n          <div style=\"color:#92400e;font-size:11px;font-weight:500\">Анкета уже заполнена<\u002Fdiv>\n          <div style=\"color:#d97706;font-size:10px;margin-top:2px\">Редактирование недоступно<\u002Fdiv>\n        <\u002Fdiv>\n        <div class=\"rev-h\" style=\"font-size:13px;margin-bottom:10px\">Ваши ответы<\u002Fdiv>\n        <div class=\"rev-item\">\n          <div class=\"rev-q\">1. С какой целью вы обращаетесь?<\u002Fdiv>\n          <div class=\"rev-a\">Хочу получить консультацию по услугам.<\u002Fdiv>\n        <\u002Fdiv>\n        <div class=\"rev-item\">\n          <div class=\"rev-q\">2. Как вы узнали о нас?<\u002Fdiv>\n          <div class=\"rev-a\">Узнала от подруги, она у вас была в марте.<\u002Fdiv>\n        <\u002Fdiv>\n      <\u002Fdiv>\n    <\u002Fdiv><\u002Fdiv>\n  <\u002Fdiv>\n\n<\u002Fdiv>\n\n<!-- ── ADMIN PANEL ── -->\n<h2>Административная панель<\u002Fh2>\n<p class=\"sub\">Веб-интерфейс для команды: список анкет, детальный просмотр, экспорт<\u002Fp>\n<div class=\"row\">\n\n  <!-- 08 Admin list -->\n  <div class=\"ab\">\n    <div class=\"ab-label\">08 · Список анкет<\u002Fdiv>\n    <div class=\"admin-frame\" style=\"width:680px\">\n      <div class=\"admin-nav\">\n        <div class=\"nav-logo\">А<\u002Fdiv>\n        <span class=\"nav-brand\">Анкета<\u002Fspan>\n        <span class=\"nav-sep\">/<\u002Fspan>\n        <span class=\"nav-page\">Анкеты<\u002Fspan>\n        <span class=\"nav-right\">admin@anketa.ru<\u002Fspan>\n      <\u002Fdiv>\n      <div class=\"admin-body\">\n        <div class=\"filters\">\n          <input class=\"a-input\" placeholder=\"Поиск по имени или телефону\" readonly=\"\">\n          <select class=\"a-sel\"><option>Все статусы<\u002Foption><\u002Fselect>\n          <button class=\"a-btn\">+ Создать ссылку<\u002Fbutton>\n        <\u002Fdiv>\n        <div style=\"background:#fff;border:1px solid #e5e7eb;border-radius:8px;overflow:hidden\">\n          <table class=\"tbl\">\n            <thead><tr><th>Клиент<\u002Fth><th>Телефон<\u002Fth><th>Дата<\u002Fth><th>Статус<\u002Fth><\u002Ftr><\u002Fthead>\n            <tbody>\n              <tr><td class=\"n\">Иванова Мария<\u002Ftd><td class=\"m\">+7 900 123-45-67<\u002Ftd><td class=\"m\">18.04.2026 14:32<\u002Ftd><td><span class=\"chip cd\">Готово<\u002Fspan><\u002Ftd><\u002Ftr>\n              <tr><td class=\"n\">Петров Алексей<\u002Ftd><td class=\"m\">+7 916 000-11-22<\u002Ftd><td class=\"m\">18.04.2026 13:10<\u002Ftd><td><span class=\"chip cp\">Обрабатывается<\u002Fspan><\u002Ftd><\u002Ftr>\n              <tr><td class=\"n\">Смирнова Ольга<\u002Ftd><td class=\"m\">+7 903 555-77-88<\u002Ftd><td class=\"m\">17.04.2026 19:45<\u002Ftd><td><span class=\"chip cd\">Готово<\u002Fspan><\u002Ftd><\u002Ftr>\n              <tr><td class=\"n\">Козлов Дмитрий<\u002Ftd><td class=\"m\">+7 926 444-33-11<\u002Ftd><td class=\"m\">17.04.2026 11:20<\u002Ftd><td><span class=\"chip cw\">Ожидание<\u002Fspan><\u002Ftd><\u002Ftr>\n              <tr><td class=\"n\">Новикова Анна<\u002Ftd><td class=\"m\">+7 905 888-66-44<\u002Ftd><td class=\"m\">16.04.2026 09:05<\u002Ftd><td><span class=\"chip cd\">Готово<\u002Fspan><\u002Ftd><\u002Ftr>\n            <\u002Ftbody>\n          <\u002Ftable>\n        <\u002Fdiv>\n      <\u002Fdiv>\n    <\u002Fdiv>\n  <\u002Fdiv>\n\n  <!-- 09 Admin detail -->\n  <div class=\"ab\">\n    <div class=\"ab-label\">09 · Детальный просмотр<\u002Fdiv>\n    <div class=\"admin-frame\" style=\"width:520px\">\n      <div class=\"admin-nav\">\n        <div class=\"nav-logo\">А<\u002Fdiv>\n        <span class=\"nav-brand\">Анкета<\u002Fspan>\n        <span class=\"nav-sep\">/<\u002Fspan>\n        <span class=\"nav-page\">Иванова Мария<\u002Fspan>\n        <span class=\"nav-right\">admin@anketa.ru<\u002Fspan>\n      <\u002Fdiv>\n      <div class=\"admin-body\">\n        <div class=\"bc\"><a href=\"#\">Анкеты<\u002Fa><span>/<\u002Fspan><span class=\"cur\">Иванова Мария<\u002Fspan><\u002Fdiv>\n        <div class=\"dh\">\n          <div>\n            <div class=\"d-name\">Иванова Мария<\u002Fdiv>\n            <div class=\"d-ph\">+7 900 123-45-67<\u002Fdiv>\n            <div class=\"d-dt\">18 апреля 2026 · 14:32<\u002Fdiv>\n          <\u002Fdiv>\n          <span class=\"chip cd\">Готово<\u002Fspan>\n        <\u002Fdiv>\n        <div class=\"q-card\">\n          <div class=\"q-title\">1. С какой целью вы обращаетесь?<\u002Fdiv>\n          <div class=\"player\">\n            <div class=\"play-btn\">\n              <svg width=\"9\" height=\"9\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#fff\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><polygon points=\"5 3 19 12 5 21 5 3\"><\u002Fpolygon><\u002Fsvg>\n            <\u002Fdiv>\n            <div style=\"flex:1\">\n              <div class=\"wf\" id=\"wf1\"><\u002Fdiv>\n              <div class=\"times\"><span class=\"cur\">0:00<\u002Fspan><span>0:14<\u002Fspan><\u002Fdiv>\n            <\u002Fdiv>\n          <\u002Fdiv>\n          <div class=\"transcript\">Хочу получить консультацию по услугам. Интересует косметология и массаж.<\u002Fdiv>\n        <\u002Fdiv>\n        <div class=\"q-card\">\n          <div class=\"q-title\">2. Как вы узнали о нас?<\u002Fdiv>\n          <div class=\"player\">\n            <div class=\"play-btn\">\n              <svg width=\"8\" height=\"8\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#fff\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"6\" y=\"4\" width=\"4\" height=\"16\"><\u002Frect><rect x=\"14\" y=\"4\" width=\"4\" height=\"16\"><\u002Frect><\u002Fsvg>\n            <\u002Fdiv>\n            <div style=\"flex:1\">\n              <div class=\"wf\" id=\"wf2\"><\u002Fdiv>\n              <div class=\"times\"><span class=\"cur\">0:05<\u002Fspan><span>0:12<\u002Fspan><\u002Fdiv>\n            <\u002Fdiv>\n          <\u002Fdiv>\n          <div class=\"transcript\">Узнала от подруги, она у вас была в марте и очень рекомендовала.<\u002Fdiv>\n        <\u002Fdiv>\n      <\u002Fdiv>\n    <\u002Fdiv>\n  <\u002Fdiv>\n\n<\u002Fdiv>\n\n<script>\nconst H = [6,9,15,12,19,15,22,13,17,20,24,17,14,11,8,17,13,19,10,7,16,12,20,14,18];\nfunction makeWave(id, played) {\n  const el = document.getElementById(id);\n  if (!el) return;\n  const n = H.length, head = Math.round(played * n);\n  H.forEach((h,i) => {\n    const s = document.createElement('span');\n    s.style.height = h+'px';\n    s.className = i < head ? 'p' : 'u';\n    el.appendChild(s);\n  });\n}\nmakeWave('wf1', 0);\nmakeWave('wf2', 0.42);\n<\u002Fscript>\n\n\n<\u002Fbody><\u002Fhtml>"
+  </script>
+</body>
+</html>

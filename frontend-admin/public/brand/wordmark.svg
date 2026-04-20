@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="220" height="48" viewBox="0 0 220 48">
+  <rect x="0" y="4" width="40" height="40" rx="6" fill="#102f6e"></rect>
+  <text x="20" y="31" font-family="system-ui, -apple-system, sans-serif" font-size="22" font-weight="700" fill="white" text-anchor="middle">А</text>
+  <text x="52" y="32" font-family="system-ui, -apple-system, sans-serif" font-size="22" font-weight="700" fill="#102f6e">Анкеты</text>
+</svg>

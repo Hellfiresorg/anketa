@@ -1,0 +1,7 @@
+{
+  "tool_name": "Bash",
+  "tool_input_preview": "{\"command\":\"cd \\\"C:\\\\Users\\\\user\\\\Desktop\\\\Code Projects\\\\anketa\\\" && dir deploy\\\\ && echo. && dir DEPLOY.md && dir backend\\\\.env.example && dir frontend-client\\\\.env.production.example && dir fronten...",
+  "error": "Exit code 2\ndir: cannot access 'deploy ': No such file or directory",
+  "timestamp": "2026-04-19T05:12:23.182Z",
+  "retry_count": 1
+}

@@ -1,0 +1,35 @@
+[Unit]
+Description=Anketa — FastAPI backend (uvicorn)
+After=network.target postgresql.service redis.service
+Wants=postgresql.service redis.service
+
+[Service]
+Type=exec
+User=anketa
+Group=anketa
+WorkingDirectory=/opt/anketa/backend
+
+# Загружаем переменные из .env
+EnvironmentFile=/opt/anketa/backend/.env
+
+# Активируем виртуальное окружение и запускаем uvicorn
+ExecStart=/opt/anketa/backend/.venv/bin/uvicorn app.main:app \
+    --host 127.0.0.1 \
+    --port 8000 \
+    --workers 2 \
+    --log-level info
+
+# Авто-перезапуск при падении
+Restart=on-failure
+RestartSec=5s
+
+# Жёсткие ограничения (защита от runaway процессов)
+LimitNOFILE=65536
+TimeoutStopSec=30
+
+# Логи идут в journald (просмотр: journalctl -u anketa-api -f)
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

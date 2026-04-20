@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><title>Motion</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  body { margin: 0; padding: 22px; background: #fff; font-family: var(--font-sans); }
+  .row { display: grid; grid-template-columns: 140px 1fr; gap: 10px; padding: 8px 0; border-bottom: 1px solid #f3f4f6; align-items: center; }
+  .row:last-child { border: 0; }
+  .k { font: 500 12px/1.2 var(--font-sans); color: #374151; }
+  .v { font: 500 11px/1.4 ui-monospace, Menlo, monospace; color: #6b7280; }
+  .lbl { font: 600 13px/1.4 var(--font-sans); color: var(--fg-strong); margin: 0 0 8px; }
+</style></head>
+<body>
+  <div class="lbl">Motion — единый язык, ничего лишнего</div>
+  <div class="row"><span class="k">button transition</span><span class="v">all · 150ms · default ease</span></div>
+  <div class="row"><span class="k">press state</span><span class="v">transform: scale(0.95)</span></div>
+  <div class="row"><span class="k">progress bar fill</span><span class="v">width · 300ms</span></div>
+  <div class="row"><span class="k">loading spinner</span><span class="v">animate-spin · 800ms linear</span></div>
+  <div class="row"><span class="k">recording mic</span><span class="v">animate-pulse · opacity 1 → 0.5</span></div>
+  <div class="row"><span class="k">submit copy</span><span class="v">animate-pulse while "Отправляем..."</span></div>
+  <div class="row"><span class="k">entry / exit</span><span class="v">— отсутствуют, нет reveal-анимаций</span></div>
+  <div class="row"><span class="k">scroll effects</span><span class="v">— отсутствуют</span></div>
+</body></html>
