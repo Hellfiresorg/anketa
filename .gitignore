@@ -30,5 +30,9 @@ frontend-client/dist/
 .DS_Store
 Thumbs.db
 
+# Claude / OMC
+.claude/
+.omc/
+
 # Alembic compiled
 *.pyc
